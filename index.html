@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>The Primer</title>
+<style>
+:root {
+  --seth-primary: #1a237e;
+  --seth-secondary: #ff6d00;
+  --seth-bg: #e8eaf6;
+  --seth-accent: #4fc3f7;
+  --brooke-primary: #880e4f;
+  --brooke-secondary: #e91e63;
+  --brooke-bg: #fce4ec;
+  --brooke-accent: #ce93d8;
+  --correct-green: #4caf50;
+  --wrong-red: #f44336;
+  --star-gold: #ffd700;
+  --radius: 16px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh; min-height: 100dvh;
+  background: #f5f5f5;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+#app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* Profile Select */
+.profile-select {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; min-height: 100dvh; padding: 20px;
+  background: linear-gradient(135deg, #1a237e 0%, #880e4f 100%);
+}
+.profile-select h1 {
+  color: white; font-size: 2.5em; margin-bottom: 10px; text-align: center;
+}
+.profile-select .subtitle {
+  color: rgba(255,255,255,0.8); font-size: 1.1em; margin-bottom: 40px; text-align: center;
+}
+.profile-cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.profile-card {
+  width: 200px; padding: 30px 20px; border-radius: var(--radius);
+  text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.profile-card:hover, .profile-card:active { transform: scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.profile-card.seth { background: linear-gradient(135deg, var(--seth-primary), #283593); color: white; }
+.profile-card.brooke { background: linear-gradient(135deg, var(--brooke-primary), #ad1457); color: white; }
+.profile-card .avatar { font-size: 4em; margin-bottom: 12px; }
+.profile-card .name { font-size: 1.5em; font-weight: 700; margin-bottom: 4px; }
+.profile-card .age { font-size: 0.95em; opacity: 0.85; }
+
+/* Home Screen */
+.home-screen { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.home-header {
+  padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+  color: white; flex-shrink: 0;
+}
+.home-header.seth-theme { background: linear-gradient(135deg, var(--seth-primary), #283593); }
+.home-header.brooke-theme { background: linear-gradient(135deg, var(--brooke-primary), #ad1457); }
+.home-header .greeting { font-size: 1.4em; font-weight: 700; }
+.home-header .stats { display: flex; gap: 16px; align-items: center; font-size: 1em; }
+.home-header .stat { display: flex; align-items: center; gap: 4px; }
+.switch-profile {
+  background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 14px;
+  border-radius: 20px; font-size: 0.85em; cursor: pointer; margin-left: 8px;
+}
+.home-body { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+.home-body.seth-theme { background: var(--seth-bg); }
+.home-body.brooke-theme { background: var(--brooke-bg); }
+.module-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  flex: 1; max-width: 600px; margin: 0 auto; width: 100%;
+}
+.module-card {
+  border-radius: var(--radius); padding: 24px 16px; text-align: center;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 160px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.module-card:hover, .module-card:active { transform: scale(1.03); }
+.module-card .module-icon { font-size: 2.8em; margin-bottom: 8px; }
+.module-card .module-name { font-size: 1.2em; font-weight: 700; margin-bottom: 6px; }
+.module-card .module-level { font-size: 0.85em; opacity: 0.8; }
+.module-card .module-stars { font-size: 0.85em; margin-top: 4px; }
+.module-card .mastery-badge {
+  position: absolute; top: 8px; right: 8px; font-size: 1.5em;
+}
+.module-card.seth-math { background: linear-gradient(135deg, #1565c0, #42a5f5); color: white; }
+.module-card.seth-reading { background: linear-gradient(135deg, #e65100, #ff9800); color: white; }
+.module-card.seth-code { background: linear-gradient(135deg, #1b5e20, #66bb6a); color: white; }
+.module-card.seth-explorer { background: linear-gradient(135deg, #4a148c, #ab47bc); color: white; }
+.module-card.brooke-math { background: linear-gradient(135deg, #e91e63, #f48fb1); color: white; }
+.module-card.brooke-reading { background: linear-gradient(135deg, #9c27b0, #ce93d8); color: white; }
+.module-card.brooke-code { background: linear-gradient(135deg, #d32f2f, #ef5350); color: white; }
+.module-card.brooke-explorer { background: linear-gradient(135deg, #00838f, #4dd0e1); color: white; }
+
+/* Activity Screen */
+.activity-screen { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.activity-header {
+  padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+  color: white; flex-shrink: 0;
+}
+.activity-header .back-btn {
+  background: rgba(255,255,255,0.2); border: none; color: white;
+  width: 48px; height: 48px; border-radius: 50%; font-size: 1.4em;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.activity-header .activity-info { text-align: center; flex: 1; }
+.activity-header .activity-title { font-size: 1.1em; font-weight: 700; }
+.activity-header .activity-level { font-size: 0.85em; opacity: 0.85; }
+.activity-header .activity-stars { font-size: 1em; }
+.activity-body {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 20px; gap: 20px;
+}
+.question-area {
+  text-align: center; width: 100%; max-width: 500px;
+}
+.question-text {
+  font-size: 1.6em; font-weight: 700; margin-bottom: 8px; line-height: 1.3;
+}
+.question-sub { font-size: 1.1em; opacity: 0.7; margin-bottom: 16px; }
+.visual-area {
+  font-size: 3em; margin: 16px 0; line-height: 1.5; letter-spacing: 4px;
+}
+.answers-grid {
+  display: grid; gap: 12px; width: 100%; max-width: 500px;
+}
+.answers-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.answers-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.answers-grid.cols-4 { grid-template-columns: 1fr 1fr; }
+.answer-btn {
+  padding: 18px 16px; border-radius: var(--radius); border: 3px solid transparent;
+  font-size: 1.3em; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  background: white; color: #333; box-shadow: var(--shadow);
+  min-height: 56px; display: flex; align-items: center; justify-content: center;
+  text-align: center; word-break: break-word;
+}
+.answer-btn:active { transform: scale(0.96); }
+.answer-btn.correct { background: var(--correct-green); color: white; border-color: #388e3c; }
+.answer-btn.wrong { background: var(--wrong-red); color: white; border-color: #c62828; animation: shake 0.4s; }
+.answer-btn.disabled { pointer-events: none; opacity: 0.7; }
+.answer-btn.highlight { border-color: var(--star-gold); background: #fff8e1; }
+
+/* Spelling area */
+.spelling-area { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; max-width: 500px; }
+.spelling-word {
+  display: flex; gap: 8px; min-height: 60px; align-items: center; justify-content: center;
+  flex-wrap: wrap;
+}
+.spelling-slot {
+  width: 52px; height: 60px; border: 3px dashed #bbb; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8em; font-weight: 700; background: white;
+}
+.spelling-slot.filled { border-style: solid; border-color: #42a5f5; background: #e3f2fd; }
+.letter-choices {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
+.letter-btn {
+  width: 52px; height: 56px; border-radius: 12px; border: 2px solid #ddd;
+  background: white; font-size: 1.5em; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; color: #333;
+}
+.letter-btn:active { transform: scale(0.92); }
+.letter-btn.used { opacity: 0.3; pointer-events: none; }
+
+/* Code Lab Grid */
+.code-lab-area { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.code-grid {
+  display: grid; gap: 2px; margin: 0 auto;
+  background: #ddd; border-radius: 8px; overflow: hidden; padding: 2px;
+}
+.code-cell {
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5em; background: white; border-radius: 4px;
+}
+.code-cell.wall { background: #455a64; }
+.code-cell.goal { background: #fff9c4; }
+.code-cell.character { background: #e3f2fd; }
+.command-bar {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+  padding: 8px; background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+  width: 100%;
+}
+.cmd-btn {
+  width: 52px; height: 52px; border-radius: 12px; border: 2px solid #ddd;
+  background: white; font-size: 1.4em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.cmd-btn:active { transform: scale(0.92); background: #e3f2fd; }
+.cmd-btn.run { background: var(--correct-green); color: white; border-color: #388e3c; font-size: 1em; font-weight: 700; width: auto; padding: 0 16px; }
+.cmd-btn.clear { background: var(--wrong-red); color: white; border-color: #c62828; font-size: 1em; font-weight: 700; width: auto; padding: 0 16px; }
+.command-queue {
+  display: flex; gap: 4px; flex-wrap: wrap; padding: 12px;
+  background: #f5f5f5; border-radius: var(--radius); min-height: 52px;
+  width: 100%; align-items: center; justify-content: center;
+}
+.queue-item {
+  width: 40px; height: 40px; border-radius: 8px; background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.queue-item.active { background: #bbdefb; }
+
+/* Explorer Cards */
+.explorer-area { width: 100%; max-width: 500px; }
+.explorer-card {
+  background: white; border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow); text-align: center; margin-bottom: 16px;
+  cursor: pointer; transition: all 0.3s;
+}
+.explorer-card .card-icon { font-size: 3em; margin-bottom: 12px; }
+.explorer-card .card-title { font-size: 1.3em; font-weight: 700; margin-bottom: 8px; }
+.explorer-card .card-body { font-size: 1.05em; line-height: 1.5; color: #555; }
+.explorer-card .card-fact { font-size: 0.95em; margin-top: 12px; padding: 12px; background: #fff9c4; border-radius: 8px; color: #333; }
+.explorer-card.locked { opacity: 0.5; pointer-events: none; }
+.explorer-card.locked::after { content: '🔒'; font-size: 2em; display: block; margin-top: 8px; }
+.explorer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.explorer-mini {
+  background: white; border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow); text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.explorer-mini:active { transform: scale(0.97); }
+.explorer-mini .mini-icon { font-size: 2.2em; margin-bottom: 6px; }
+.explorer-mini .mini-title { font-size: 0.95em; font-weight: 600; }
+.explorer-mini.locked { opacity: 0.4; pointer-events: none; }
+
+/* Feedback Overlay */
+.feedback-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; pointer-events: none;
+}
+.feedback-msg {
+  font-size: 3em; font-weight: 700; animation: feedbackPop 0.8s ease-out forwards;
+}
+.star-burst {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-size: 4em; animation: starBurst 1s ease-out forwards; z-index: 101;
+  pointer-events: none;
+}
+
+/* Pattern options for code lab */
+.pattern-options {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+}
+.pattern-btn {
+  width: 64px; height: 64px; border-radius: 50%; border: 3px solid #ddd;
+  background: white; font-size: 2em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.pattern-btn:active { transform: scale(0.9); }
+.pattern-btn.correct { border-color: var(--correct-green); background: #e8f5e9; }
+.pattern-btn.wrong { border-color: var(--wrong-red); animation: shake 0.4s; }
+
+/* Sequence / sorting areas */
+.sequence-area {
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  margin: 12px 0;
+}
+.seq-item {
+  padding: 12px 16px; background: white; border-radius: 12px;
+  box-shadow: var(--shadow); font-size: 1.1em; cursor: pointer;
+  transition: all 0.2s; min-width: 80px; text-align: center;
+}
+.seq-item:active { transform: scale(0.95); }
+.seq-item.selected { background: #bbdefb; border: 2px solid #42a5f5; }
+.seq-item.placed { opacity: 0.4; pointer-events: none; }
+.drop-slots { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+.drop-slot {
+  width: 80px; height: 50px; border: 3px dashed #bbb; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1em; background: rgba(255,255,255,0.5);
+}
+.drop-slot.filled { border-style: solid; border-color: #42a5f5; background: white; }
+
+/* Next button */
+.next-btn {
+  padding: 16px 40px; border-radius: 30px; border: none;
+  font-size: 1.2em; font-weight: 700; cursor: pointer; color: white;
+  box-shadow: var(--shadow); transition: all 0.2s; margin-top: 12px;
+}
+.next-btn:active { transform: scale(0.96); }
+.next-btn.seth-theme { background: linear-gradient(135deg, var(--seth-primary), #42a5f5); }
+.next-btn.brooke-theme { background: linear-gradient(135deg, var(--brooke-primary), #e91e63); }
+
+/* Streak & progress bar */
+.progress-bar-container {
+  width: 100%; max-width: 300px; height: 12px; background: rgba(255,255,255,0.3);
+  border-radius: 6px; overflow: hidden; margin: 4px 0;
+}
+.progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s; background: var(--star-gold); }
+
+/* Level Complete */
+.level-complete {
+  text-align: center; padding: 30px;
+}
+.level-complete h2 { font-size: 2em; margin-bottom: 12px; }
+.level-complete .stars-earned { font-size: 3em; margin: 16px 0; }
+.level-complete p { font-size: 1.1em; margin-bottom: 20px; opacity: 0.8; }
+
+/* Animations */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+@keyframes feedbackPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+@keyframes starBurst {
+  0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; }
+  40% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(2); opacity: 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .profile-card { width: 160px; min-height: 180px; padding: 20px 16px; }
+  .profile-card .avatar { font-size: 3em; }
+  .profile-card .name { font-size: 1.2em; }
+  .module-grid { gap: 12px; }
+  .module-card { padding: 18px 12px; min-height: 140px; }
+  .module-card .module-icon { font-size: 2.2em; }
+  .question-text { font-size: 1.3em; }
+  .visual-area { font-size: 2.4em; }
+  .answer-btn { padding: 14px 12px; font-size: 1.1em; }
+  .code-cell { width: 40px; height: 40px; font-size: 1.2em; }
+  .cmd-btn { width: 46px; height: 46px; }
+  .explorer-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+@media (max-width: 360px) {
+  .module-grid { grid-template-columns: 1fr; }
+  .code-cell { width: 36px; height: 36px; font-size: 1em; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+
+// ===== SOUND SYSTEM =====
+const Sound = {
+  ctx: null,
+  init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  play(freq, duration, type='sine') {
+    try {
+      this.init();
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.15, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(); o.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  },
+  correct() { this.play(523, 0.1); setTimeout(() => this.play(659, 0.1), 100); setTimeout(() => this.play(784, 0.2), 200); },
+  wrong() { this.play(200, 0.2, 'sawtooth'); setTimeout(() => this.play(180, 0.3, 'sawtooth'), 200); },
+  star() { [523,659,784,1047].forEach((f,i) => setTimeout(() => this.play(f, 0.15), i*80)); },
+  click() { this.play(440, 0.05); },
+  levelUp() { [523,587,659,698,784,880,988,1047].forEach((f,i) => setTimeout(() => this.play(f, 0.12), i*60)); }
+};
+
+// ===== STATE MANAGEMENT =====
+const STORAGE_KEY = 'the-primer-v1';
+function getDefaultProfile(name) {
+  return {
+    name,
+    totalStars: 0,
+    streak: { current: 0, lastDate: null },
+    modules: {
+      math: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false },
+      reading: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false },
+      code: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false },
+      explorer: { cardsUnlocked: 3, cardsViewed: [] }
+    }
+  };
+}
+
+let state = { currentProfile: null, profiles: { seth: getDefaultProfile('Seth'), brooke: getDefaultProfile('Brooke') } };
+let currentModule = null;
+let questionCount = 0;
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const parsed = JSON.parse(s);
+      // Merge defaults for any missing fields
+      ['seth','brooke'].forEach(k => {
+        if (!parsed.profiles[k]) parsed.profiles[k] = getDefaultProfile(k === 'seth' ? 'Seth' : 'Brooke');
+        const def = getDefaultProfile(k === 'seth' ? 'Seth' : 'Brooke');
+        Object.keys(def.modules).forEach(m => {
+          if (!parsed.profiles[k].modules[m]) parsed.profiles[k].modules[m] = def.modules[m];
+        });
+      });
+      state = parsed;
+    }
+  } catch(e) { console.log('State load error', e); }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getProfile() { return state.profiles[state.currentProfile]; }
+function isSeth() { return state.currentProfile === 'seth'; }
+function getTheme() { return isSeth() ? 'seth' : 'brooke'; }
+function getMaxLevel(module) {
+  const max = { math: isSeth() ? 7 : 5, reading: isSeth() ? 6 : 5, code: isSeth() ? 6 : 5 };
+  return max[module] || 5;
+}
+
+function updateStreak() {
+  const p = getProfile();
+  const today = new Date().toISOString().slice(0, 10);
+  if (p.streak.lastDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (p.streak.lastDate === yesterday) { p.streak.current++; }
+  else if (p.streak.lastDate !== today) { p.streak.current = 1; }
+  p.streak.lastDate = today;
+  saveState();
+}
+
+// ===== UI HELPERS =====
+const $ = id => document.getElementById(id);
+const app = () => document.getElementById('app');
+
+function showFeedback(emoji, text) {
+  const el = document.createElement('div');
+  el.className = 'feedback-overlay';
+  el.innerHTML = `<div class="feedback-msg">${emoji} ${text||''}</div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+function showStarBurst() {
+  const el = document.createElement('div');
+  el.className = 'star-burst';
+  el.textContent = '⭐';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function pick(arr, n) { return shuffle(arr).slice(0, n); }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pickOne(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ===== RENDER SCREENS =====
+function renderProfileSelect() {
+  app().innerHTML = `
+    <div class="profile-select">
+      <h1>📖 The Primer</h1>
+      <div class="subtitle">Choose your adventure</div>
+      <div class="profile-cards">
+        <div class="profile-card seth" onclick="selectProfile('seth')">
+          <div class="avatar">🚀</div>
+          <div class="name">Seth</div>
+          <div class="age">⭐ ${state.profiles.seth.totalStars} stars</div>
+        </div>
+        <div class="profile-card brooke" onclick="selectProfile('brooke')">
+          <div class="avatar">🦄</div>
+          <div class="name">Brooke</div>
+          <div class="age">⭐ ${state.profiles.brooke.totalStars} stars</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectProfile(name) {
+  Sound.click();
+  state.currentProfile = name;
+  updateStreak();
+  saveState();
+  renderHome();
+}
+
+function renderHome() {
+  const p = getProfile();
+  const t = getTheme();
+  const modules = [
+    { key: 'math', icon: '🔢', name: 'Math', cardClass: `${t}-math` },
+    { key: 'reading', icon: '📖', name: 'Reading', cardClass: `${t}-reading` },
+    { key: 'code', icon: '💻', name: 'Code Lab', cardClass: `${t}-code` },
+    { key: 'explorer', icon: '🔬', name: 'Explorer', cardClass: `${t}-explorer` }
+  ];
+
+  app().innerHTML = `
+    <div class="home-screen">
+      <div class="home-header ${t}-theme">
+        <div>
+          <div class="greeting">${isSeth() ? '🚀' : '🦄'} Hi, ${p.name}!</div>
+        </div>
+        <div class="stats">
+          <span class="stat">⭐ ${p.totalStars}</span>
+          <span class="stat">🔥 ${p.streak.current}</span>
+          <button class="switch-profile" onclick="renderProfileSelect()">Switch</button>
+        </div>
+      </div>
+      <div class="home-body ${t}-theme">
+        <div class="module-grid">
+          ${modules.map(m => {
+            const mod = p.modules[m.key];
+            const maxLvl = m.key === 'explorer' ? '' : getMaxLevel(m.key);
+            const stars = m.key === 'explorer' ? (mod.cardsViewed||[]).length : mod.starsInModule;
+            const level = m.key === 'explorer' ? '' : `Level ${mod.level}/${maxLvl}`;
+            const mastery = m.key !== 'explorer' && mod.mastery ? '<div class="mastery-badge">🏆</div>' : '';
+            return `<div class="module-card ${m.cardClass}" onclick="startModule('${m.key}')">
+              ${mastery}
+              <div class="module-icon">${m.icon}</div>
+              <div class="module-name">${m.name}</div>
+              ${level ? `<div class="module-level">${level}</div>` : ''}
+              <div class="module-stars">⭐ ${stars}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function startModule(mod) {
+  Sound.click();
+  currentModule = mod;
+  questionCount = 0;
+  if (mod === 'explorer') { renderExplorer(); return; }
+  renderActivity();
+}
+
+function goHome() {
+  Sound.click();
+  currentModule = null;
+  renderHome();
+}
+
+// ===== RECORD ANSWER =====
+function recordAnswer(correct) {
+  const p = getProfile();
+  const mod = p.modules[currentModule];
+  mod.totalAnswered++;
+  if (correct) {
+    mod.totalCorrect++;
+    mod.consecutiveCorrect++;
+    mod.consecutiveWrong = 0;
+    if (mod.totalCorrect % 5 === 0) {
+      mod.starsInModule++;
+      p.totalStars++;
+      Sound.star();
+      showStarBurst();
+      // Unlock explorer cards
+      p.modules.explorer.cardsUnlocked = 3 + Math.floor(p.totalStars / 3);
+    } else {
+      Sound.correct();
+      showFeedback('✅', '');
+    }
+    // Level up
+    if (mod.consecutiveCorrect >= 3 && mod.level < getMaxLevel(currentModule)) {
+      mod.level++;
+      mod.consecutiveCorrect = 0;
+      Sound.levelUp();
+      showFeedback('🎉', 'Level Up!');
+    }
+  } else {
+    mod.consecutiveWrong++;
+    mod.consecutiveCorrect = 0;
+    Sound.wrong();
+    showFeedback('', 'Try again!');
+    // Level down
+    if (mod.consecutiveWrong >= 3 && mod.level > 1) {
+      mod.level--;
+      mod.consecutiveWrong = 0;
+    }
+  }
+  saveState();
+}
+
+
+// ===== MATH MODULE =====
+const MATH_OBJECTS = ['🚗','🏎️','⭐','🚀','🔥','🏀','⚾','🎸','🎮','🍕','🍎','🐶','🐱','🦊','🐸','🌟','💎','🎯','🎪','🎨'];
+const BROOKE_OBJECTS = ['🦄','🚒','🌈','🦋','🌸','🐰','🐱','🍰','🌺','🎀','⭐','💖','🍭','🐝','🐞','🌻','🎠','🧁','🐶','🎈'];
+const SHAPES = [{name:'Circle',emoji:'⬤'},{name:'Square',emoji:'⬜'},{name:'Triangle',emoji:'🔺'},{name:'Star',emoji:'⭐'},{name:'Heart',emoji:'❤️'},{name:'Diamond',emoji:'💎'}];
+const NUMBER_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+
+function generateMathQuestion() {
+  const p = getProfile();
+  const level = p.modules.math.level;
+  if (isSeth()) return generateSethMath(level);
+  return generateBrookeMath(level);
+}
+
+function generateBrookeMath(level) {
+  switch(level) {
+    case 1: { // Counting objects
+      const count = randInt(1, 8);
+      const obj = pickOne(BROOKE_OBJECTS);
+      const objects = Array(count).fill(obj).join(' ');
+      const options = shuffle([count, ...pick([1,2,3,4,5,6,7,8,9,10].filter(n=>n!==count), 3)]);
+      return { type: 'choice', question: 'How many do you see?', visual: objects, options: options.map(String), answer: String(count) };
+    }
+    case 2: { // Number recognition
+      const num = randInt(1, 10);
+      const word = NUMBER_WORDS[num];
+      const others = pick(NUMBER_WORDS.filter((_,i) => i !== num && i > 0), 3);
+      const options = shuffle([word, ...others]);
+      return { type: 'choice', question: `Which word is ${num}?`, visual: String(num), options, answer: word };
+    }
+    case 3: { // Shape recognition
+      const shape = pickOne(SHAPES);
+      const others = pick(SHAPES.filter(s => s.name !== shape.name), 3);
+      const options = shuffle([shape, ...others]);
+      return { type: 'choice', question: 'What shape is this?', visual: shape.emoji, options: options.map(s => s.name), answer: shape.name };
+    }
+    case 4: { // Basic addition with visuals
+      const a = randInt(1, 3), b = randInt(1, 3);
+      const obj = pickOne(BROOKE_OBJECTS);
+      const visual = Array(a).fill(obj).join(' ') + '  +  ' + Array(b).fill(obj).join(' ');
+      const correct = a + b;
+      const options = shuffle([correct, ...pick([1,2,3,4,5,6,7,8].filter(n=>n!==correct), 3)]);
+      return { type: 'choice', question: `${a} + ${b} = ?`, visual, options: options.map(String), answer: String(correct) };
+    }
+    case 5: { // Comparing numbers
+      const a = randInt(1, 9), b = randInt(1, 9);
+      if (a === b) return generateBrookeMath(level);
+      const bigger = Math.max(a, b);
+      return { type: 'choice', question: 'Which number is bigger?', visual: `${a}   or   ${b}`, options: [String(a), String(b)], answer: String(bigger), cols: 2 };
+    }
+    default: return generateBrookeMath(1);
+  }
+}
+
+function generateSethMath(level) {
+  switch(level) {
+    case 1: { // Addition to 10
+      const a = randInt(1, 5), b = randInt(1, 5);
+      const correct = a + b;
+      const options = shuffle([correct, ...pick(Array.from({length:10},(_,i)=>i+1).filter(n=>n!==correct), 3)]);
+      return { type: 'choice', question: `${a} + ${b} = ?`, visual: `${a} + ${b}`, options: options.map(String), answer: String(correct) };
+    }
+    case 2: { // Addition to 20
+      const a = randInt(3, 10), b = randInt(3, 10);
+      const correct = a + b;
+      const wrongs = new Set();
+      while (wrongs.size < 3) { const w = correct + randInt(-3,3); if (w > 0 && w !== correct) wrongs.add(w); }
+      const options = shuffle([correct, ...wrongs]);
+      return { type: 'choice', question: `${a} + ${b} = ?`, visual: `${a} + ${b}`, options: options.map(String), answer: String(correct) };
+    }
+    case 3: { // Subtraction
+      const b = randInt(1, 5), correct = randInt(1, 5);
+      const a = b + correct;
+      const wrongs = new Set();
+      while (wrongs.size < 3) { const w = correct + randInt(-3,3); if (w >= 0 && w !== correct) wrongs.add(w); }
+      const options = shuffle([correct, ...wrongs]);
+      return { type: 'choice', question: `${a} − ${b} = ?`, visual: `${a} − ${b}`, options: options.map(String), answer: String(correct) };
+    }
+    case 4: { // Mixed
+      return Math.random() < 0.5 ? generateSethMath(2) : generateSethMath(3);
+    }
+    case 5: { // Multiplication (2s, 5s, 10s)
+      const base = pickOne([2, 5, 10]);
+      const mult = randInt(1, 10);
+      const correct = base * mult;
+      const wrongs = new Set();
+      while (wrongs.size < 3) { const w = base * randInt(1,10); if (w !== correct) wrongs.add(w); }
+      const options = shuffle([correct, ...wrongs]);
+      return { type: 'choice', question: `${base} × ${mult} = ?`, visual: `${base} × ${mult}`, options: options.map(String), answer: String(correct) };
+    }
+    case 6: { // Word problems
+      const problems = [
+        () => { const a=randInt(2,8), b=randInt(1,5); return { q: `Seth has ${a} race cars. He gets ${b} more. How many race cars does he have?`, a: a+b }; },
+        () => { const a=randInt(5,12), b=randInt(1,4); return { q: `There are ${a} rockets on the launch pad. ${b} blast off. How many are left?`, a: a-b }; },
+        () => { const a=randInt(3,7), b=randInt(2,5); return { q: `Each race car has ${a} stickers. Seth has ${b} cars. How many stickers total?`, a: a*b }; },
+        () => { const a=randInt(3,8), b=randInt(2,6); return { q: `Seth scored ${a} points in the first half and ${b} points in the second half. What's his total?`, a: a+b }; },
+        () => { const a=randInt(6,15), b=randInt(2,5); return { q: `There are ${a} astronauts. ${b} go on a mission. How many stay behind?`, a: a-b }; },
+      ];
+      const prob = pickOne(problems)();
+      const wrongs = new Set();
+      while (wrongs.size < 3) { const w = prob.a + randInt(-3,3); if (w > 0 && w !== prob.a) wrongs.add(w); }
+      const options = shuffle([prob.a, ...wrongs]);
+      return { type: 'choice', question: prob.q, options: options.map(String), answer: String(prob.a) };
+    }
+    case 7: { // Missing number
+      const correct = randInt(1, 9);
+      const b = randInt(1, 8);
+      const sum = correct + b;
+      const wrongs = new Set();
+      while (wrongs.size < 3) { const w = correct + randInt(-3,3); if (w > 0 && w !== correct) wrongs.add(w); }
+      const options = shuffle([correct, ...wrongs]);
+      return { type: 'choice', question: `___ + ${b} = ${sum}`, visual: `? + ${b} = ${sum}`, options: options.map(String), answer: String(correct) };
+    }
+    default: return generateSethMath(1);
+  }
+}
+
+// ===== READING MODULE =====
+const CVC_WORDS = [
+  {word:'cat',img:'🐱'},{word:'dog',img:'🐶'},{word:'hat',img:'🎩'},{word:'bat',img:'🦇'},{word:'rat',img:'🐀'},
+  {word:'mat',img:'🟫'},{word:'sat',img:'💺'},{word:'big',img:'🏔️'},{word:'dig',img:'⛏️'},{word:'pig',img:'🐷'},
+  {word:'wig',img:'💇'},{word:'red',img:'🔴'},{word:'bed',img:'🛏️'},{word:'hen',img:'🐔'},{word:'pen',img:'🖊️'},
+  {word:'ten',img:'🔟'},{word:'men',img:'👨'},{word:'cup',img:'☕'},{word:'pup',img:'🐕'},{word:'bug',img:'🐛'},
+  {word:'rug',img:'🟤'},{word:'sun',img:'☀️'},{word:'run',img:'🏃'},{word:'fun',img:'🎉'},{word:'bun',img:'🍞'},
+  {word:'hot',img:'🌡️'},{word:'pot',img:'🍲'},{word:'dot',img:'⚫'},{word:'not',img:'🚫'},{word:'map',img:'🗺️'},
+  {word:'cap',img:'🧢'},{word:'tap',img:'🚰'},{word:'nap',img:'😴'},{word:'kit',img:'🧰'},{word:'hit',img:'💥'},
+  {word:'sit',img:'🪑'},{word:'van',img:'🚐'},{word:'can',img:'🥫'},{word:'fan',img:'🌀'},{word:'man',img:'👤'},
+  {word:'box',img:'📦'},{word:'fox',img:'🦊'},{word:'hop',img:'🐰'},{word:'mop',img:'🧹'},{word:'log',img:'🪵'},
+  {word:'hog',img:'🐗'},{word:'fog',img:'🌫️'},{word:'jam',img:'🍓'},{word:'ham',img:'🥓'},{word:'gum',img:'🫧'},
+];
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const LETTER_SOUNDS = {a:'ah',b:'buh',c:'kuh',d:'duh',e:'eh',f:'fff',g:'guh',h:'huh',i:'ih',j:'juh',k:'kuh',l:'lll',m:'mmm',n:'nnn',o:'oh',p:'puh',q:'kwuh',r:'rrr',s:'sss',t:'tuh',u:'uh',v:'vvv',w:'wuh',x:'ks',y:'yuh',z:'zzz'};
+const LETTER_IMAGES = {a:['🍎','Apple'],b:['🐻','Bear'],c:['🐱','Cat'],d:['🐶','Dog'],e:['🥚','Egg'],f:['🐸','Frog'],g:['🍇','Grapes'],h:['🏠','House'],i:['🍦','Ice cream'],j:['🤹','Juggler'],k:['🪁','Kite'],l:['🦁','Lion'],m:['🐵','Monkey'],n:['🥜','Nut'],o:['🐙','Octopus'],p:['🐧','Penguin'],q:['👑','Queen'],r:['🌈','Rainbow'],s:['☀️','Sun'],t:['🐢','Turtle'],u:['☂️','Umbrella'],v:['🌋','Volcano'],w:['🐋','Whale'],x:['✖️','X-ray'],y:['🪀','Yo-yo'],z:['🦓','Zebra']};
+const SIGHT_WORDS_BROOKE = ['the','a','I','is','it','my','and','to','we','go','no','so','me','he','she','up','in','on','at','do'];
+const SIGHT_WORDS_SETH = ['the','and','was','for','are','but','not','you','all','can','had','her','one','our','out','has','his','how','its','may','new','now','old','see','way','who','did','get','let','say','too','any'];
+const SENTENCES = [
+  {text:'The cat sat.',img:'🐱💺',answer:'A cat sitting down'},
+  {text:'The dog ran.',img:'🐶🏃',answer:'A dog running'},
+  {text:'The sun is hot.',img:'☀️🌡️',answer:'A hot sunny day'},
+  {text:'I see a bug.',img:'👁️🐛',answer:'Looking at a bug'},
+  {text:'The cup is red.',img:'☕🔴',answer:'A red cup'},
+  {text:'A big hat.',img:'🎩🏔️',answer:'A large hat'},
+  {text:'The hen sat.',img:'🐔💺',answer:'A hen sitting'},
+  {text:'I can run.',img:'🏃✅',answer:'Someone running'},
+  {text:'A fox in a box.',img:'🦊📦',answer:'A fox inside a box'},
+  {text:'The pig is big.',img:'🐷🏔️',answer:'A large pig'},
+];
+const FILL_BLANKS = [
+  {sentence:'The ___ is red.', options:['car','hat','cup','sun'], answers:['car','hat','cup','sun']},
+  {sentence:'I see a ___.', options:['dog','cat','bug','fox'], answers:['dog','cat','bug','fox']},
+  {sentence:'The ___ can run.', options:['dog','man','cat','fox'], answers:['dog','man','cat','fox']},
+  {sentence:'A ___ in the sun.', options:['hat','cat','bug','pup'], answers:['hat','cat','bug','pup']},
+  {sentence:'The ___ is hot.', options:['pot','sun','pan','cup'], answers:['pot','sun','pan','cup']},
+  {sentence:'I have a big ___.', options:['box','bag','hat','cup'], answers:['box','bag','hat','cup']},
+];
+const STORIES = [
+  {story:'The cat sat on the mat. The dog ran to the cat. The cat ran up a tree.', q:'Where did the cat go?', options:['Up a tree','In a box','To bed','In the car'], answer:'Up a tree'},
+  {story:'Seth got a red hat. He put it on. It was too big!', q:'What was wrong with the hat?', options:['Too big','Too red','Too small','Too old'], answer:'Too big'},
+  {story:'The sun was hot. The pup sat in the mud. The mud was fun!', q:'Where did the pup sit?', options:['In the mud','On the bed','In a cup','On the rug'], answer:'In the mud'},
+  {story:'A hen had ten eggs. Six eggs did hatch. The hen was happy.', q:'How many eggs hatched?', options:['Six','Ten','One','Three'], answer:'Six'},
+  {story:'The fox got a box. It hid in the box. No one can see the fox!', q:'Where is the fox?', options:['In the box','Up a tree','In the mud','On the mat'], answer:'In the box'},
+];
+
+function generateReadingQuestion() {
+  const p = getProfile();
+  const level = p.modules.reading.level;
+  if (isSeth()) return generateSethReading(level);
+  return generateBrookeReading(level);
+}
+
+function generateBrookeReading(level) {
+  switch(level) {
+    case 1: { // Letter recognition
+      const letter = pickOne(LETTERS);
+      const upper = letter.toUpperCase();
+      const others = pick(LETTERS.filter(l => l !== letter), 3).map(l => l.toUpperCase());
+      const options = shuffle([upper, ...others]);
+      return { type: 'choice', question: 'Find this letter!', visual: upper, options, answer: upper, cols: 2 };
+    }
+    case 2: { // Letter sounds
+      const letter = pickOne(LETTERS.slice(0, 20));
+      const sound = LETTER_SOUNDS[letter];
+      const others = pick(LETTERS.filter(l => l !== letter).slice(0, 20), 3).map(l => l.toUpperCase());
+      const options = shuffle([letter.toUpperCase(), ...others]);
+      return { type: 'choice', question: `Which letter makes the "${sound}" sound?`, options, answer: letter.toUpperCase(), cols: 2 };
+    }
+    case 3: { // Letter to picture
+      const letter = pickOne(Object.keys(LETTER_IMAGES).slice(0, 20));
+      const [emoji, word] = LETTER_IMAGES[letter];
+      const others = pick(Object.keys(LETTER_IMAGES).filter(l => l !== letter).slice(0, 20), 3).map(l => `${LETTER_IMAGES[l][0]} ${LETTER_IMAGES[l][1]}`);
+      return { type: 'choice', question: `${letter.toUpperCase()} is for...`, visual: letter.toUpperCase(), options: shuffle([`${emoji} ${word}`, ...others]), answer: `${emoji} ${word}` };
+    }
+    case 4: { // Upper/lowercase matching
+      const letter = pickOne(LETTERS);
+      const others = pick(LETTERS.filter(l => l !== letter), 3);
+      const options = shuffle([letter, ...others]);
+      return { type: 'choice', question: 'Match the lowercase letter!', visual: letter.toUpperCase(), options, answer: letter, cols: 2 };
+    }
+    case 5: { // Sight words
+      const word = pickOne(SIGHT_WORDS_BROOKE);
+      const others = pick(SIGHT_WORDS_BROOKE.filter(w => w !== word), 3);
+      const options = shuffle([word, ...others]);
+      return { type: 'choice', question: `Find the word "${word}"`, options, answer: word, cols: 2 };
+    }
+    default: return generateBrookeReading(1);
+  }
+}
+
+function generateSethReading(level) {
+  switch(level) {
+    case 1: { // CVC spelling
+      const w = pickOne(CVC_WORDS);
+      const extraLetters = pick(LETTERS.filter(l => !w.word.includes(l)), 4);
+      const allLetters = shuffle([...w.word.split(''), ...extraLetters]);
+      return { type: 'spelling', question: 'Spell this word!', visual: `${w.img}`, targetWord: w.word, letters: allLetters };
+    }
+    case 2: { // CVC reading
+      const w = pickOne(CVC_WORDS);
+      const others = pick(CVC_WORDS.filter(x => x.word !== w.word), 3);
+      const options = shuffle([w, ...others]);
+      return { type: 'choice', question: 'What does this word say?', visual: w.word.toUpperCase(), options: options.map(o => `${o.img} ${o.word}`), answer: `${w.img} ${w.word}` };
+    }
+    case 3: { // Sentences
+      const s = pickOne(SENTENCES);
+      const others = pick(SENTENCES.filter(x => x.text !== s.text), 3).map(x => x.answer);
+      const options = shuffle([s.answer, ...others]);
+      return { type: 'choice', question: s.text, visual: '', options, answer: s.answer };
+    }
+    case 4: { // Sight words
+      const word = pickOne(SIGHT_WORDS_SETH);
+      const others = pick(SIGHT_WORDS_SETH.filter(w2 => w2 !== word), 3);
+      const options = shuffle([word, ...others]);
+      return { type: 'choice', question: `Find the word "${word}"`, options, answer: word, cols: 2 };
+    }
+    case 5: { // Fill in the blank
+      const fb = pickOne(FILL_BLANKS);
+      const answer = pickOne(fb.answers);
+      const others = pick(fb.options.filter(o => o !== answer), 3);
+      return { type: 'choice', question: fb.sentence, options: shuffle([answer, ...others]), answer };
+    }
+    case 6: { // Story comprehension
+      const s = pickOne(STORIES);
+      return { type: 'choice', question: '', visual: '', storyText: s.story, storyQ: s.q, options: s.options, answer: s.answer };
+    }
+    default: return generateSethReading(1);
+  }
+}
+
+
+// ===== CODE LAB MODULE =====
+const PATTERNS = {
+  brooke: [
+    { seq: ['🔴','🔵','🔴','🔵','🔴'], answer: '🔵', options: ['🔵','🔴','🟢','🟡'] },
+    { seq: ['🟡','🟢','🟡','🟢','🟡'], answer: '🟢', options: ['🟡','🟢','🔴','🔵'] },
+    { seq: ['⭐','🌙','⭐','🌙','⭐'], answer: '🌙', options: ['🌙','⭐','☀️','🌈'] },
+    { seq: ['🦄','🌈','🦄','🌈','🦄'], answer: '🌈', options: ['🌈','🦄','⭐','🌸'] },
+    { seq: ['🚒','🚒','🚑','🚒','🚒'], answer: '🚑', options: ['🚑','🚒','🚗','🚌'] },
+    { seq: ['💖','💜','💖','💜','💖'], answer: '💜', options: ['💜','💖','💙','💚'] },
+    { seq: ['🐱','🐶','🐱','🐶','🐱'], answer: '🐶', options: ['🐶','🐱','🐰','🐸'] },
+    { seq: ['🌸','🌺','🌸','🌺','🌸'], answer: '🌺', options: ['🌺','🌸','🌻','🌷'] },
+  ],
+  brookeHard: [
+    { seq: ['🔴','🔴','🔵','🔴','🔴','🔵','🔴','🔴'], answer: '🔵', options: ['🔵','🔴','🟢','🟡'] },
+    { seq: ['🦄','🦄','🌈','🦄','🦄','🌈','🦄','🦄'], answer: '🌈', options: ['🌈','🦄','⭐','🌸'] },
+    { seq: ['⭐','🌙','🌙','⭐','🌙','🌙','⭐','🌙'], answer: '🌙', options: ['🌙','⭐','☀️','🌈'] },
+    { seq: ['🚒','🚑','🚒','🚒','🚑','🚒','🚒','🚑'], answer: '🚒', options: ['🚒','🚑','🚗','🚌'] },
+    { seq: ['💖','💜','💙','💖','💜','💙','💖','💜'], answer: '💙', options: ['💙','💖','💜','💚'] },
+    { seq: ['🐱','🐶','🐰','🐱','🐶','🐰','🐱','🐶'], answer: '🐰', options: ['🐰','🐱','🐶','🐸'] },
+  ]
+};
+
+const SEQUENCES_BROOKE = [
+  { items: ['🥚 Egg','🐣 Chick','🐔 Chicken'], order: [0,1,2] },
+  { items: ['🌱 Seed','🌿 Sprout','🌻 Flower'], order: [0,1,2] },
+  { items: ['☁️ Cloud','🌧️ Rain','🌈 Rainbow'], order: [0,1,2] },
+  { items: ['🍳 Cook','🍽️ Eat','🧹 Clean'], order: [0,1,2] },
+  { items: ['🌅 Morning','☀️ Day','🌙 Night'], order: [0,1,2] },
+  { items: ['👶 Baby','🧒 Kid','🧑 Grown-up'], order: [0,1,2] },
+];
+
+const SORT_TASKS = [
+  { instruction: 'Pick all the RED things!', items: [{e:'🔴',g:true},{e:'🟢',g:false},{e:'❤️',g:true},{e:'🔵',g:false},{e:'🍎',g:true},{e:'🌿',g:false}] },
+  { instruction: 'Pick all the ANIMALS!', items: [{e:'🐱',g:true},{e:'🚗',g:false},{e:'🐶',g:true},{e:'🏠',g:false},{e:'🐸',g:true},{e:'📦',g:false}] },
+  { instruction: 'Pick all the CIRCLES!', items: [{e:'⚽',g:true},{e:'⬜',g:false},{e:'🏀',g:true},{e:'🔺',g:false},{e:'🟠',g:true},{e:'⬛',g:false}] },
+  { instruction: 'Pick all the FOOD!', items: [{e:'🍎',g:true},{e:'🚗',g:false},{e:'🍕',g:true},{e:'🌳',g:false},{e:'🍪',g:true},{e:'🎸',g:false}] },
+];
+
+// Grid puzzles for Code Lab
+function generateGridPuzzle(gridSize, numWalls, charEmoji, goalEmoji) {
+  const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+  // Place character at top-left
+  const start = { r: 0, c: 0 };
+  // Place goal
+  let goal;
+  const attempts = 100;
+  for (let i = 0; i < attempts; i++) {
+    const r = randInt(1, gridSize - 1);
+    const c = randInt(1, gridSize - 1);
+    if (r + c >= 2) { goal = { r, c }; break; }
+  }
+  if (!goal) goal = { r: gridSize - 1, c: gridSize - 1 };
+  // Place walls (avoid start and goal)
+  let wallsPlaced = 0;
+  for (let i = 0; i < attempts && wallsPlaced < numWalls; i++) {
+    const r = randInt(0, gridSize - 1);
+    const c = randInt(0, gridSize - 1);
+    if ((r === start.r && c === start.c) || (r === goal.r && c === goal.c)) continue;
+    if (grid[r][c] === 0) { grid[r][c] = 1; wallsPlaced++; }
+  }
+  return { grid, start, goal, charEmoji, goalEmoji, size: gridSize };
+}
+
+function generateCodeQuestion() {
+  const p = getProfile();
+  const level = p.modules.code.level;
+  if (isSeth()) return generateSethCode(level);
+  return generateBrookeCode(level);
+}
+
+function generateBrookeCode(level) {
+  switch(level) {
+    case 1: { // Simple patterns
+      const pat = pickOne(PATTERNS.brooke);
+      return { type: 'pattern', question: 'What comes next?', sequence: pat.seq, options: pat.options, answer: pat.answer };
+    }
+    case 2: { // Sequencing
+      const seq = pickOne(SEQUENCES_BROOKE);
+      return { type: 'sequence', question: 'Put these in order!', items: seq.items, order: seq.order };
+    }
+    case 3: { // Complex patterns
+      const pat = pickOne(PATTERNS.brookeHard);
+      return { type: 'pattern', question: 'What comes next?', sequence: pat.seq, options: pat.options, answer: pat.answer };
+    }
+    case 4: { // Sorting
+      const task = pickOne(SORT_TASKS);
+      return { type: 'sorting', question: task.instruction, items: shuffle(task.items) };
+    }
+    case 5: { // Simple maze
+      const puzzle = generateGridPuzzle(4, 3, '🦄', '🌈');
+      return { type: 'grid', question: 'Guide the unicorn to the rainbow!', puzzle };
+    }
+    default: return generateBrookeCode(1);
+  }
+}
+
+function generateSethCode(level) {
+  switch(level) {
+    case 1: { // Sequence commands
+      const puzzle = generateGridPuzzle(5, 4, '🏎️', '🏁');
+      return { type: 'grid', question: 'Drive the race car to the finish!', puzzle };
+    }
+    case 2: { // Loops (still grid but with loop UI)
+      const puzzle = generateGridPuzzle(5, 3, '🚀', '⭐');
+      return { type: 'grid', question: 'Launch the rocket to the star! Try using loops.', puzzle, showLoops: true };
+    }
+    case 3: { // Conditionals
+      const puzzle = generateGridPuzzle(5, 5, '🏎️', '🏁');
+      return { type: 'grid', question: 'Navigate around walls to reach the flag!', puzzle, showLoops: true };
+    }
+    case 4: { // Bug fixing
+      return generateBugFix();
+    }
+    case 5: { // Multi-step
+      const puzzle = generateGridPuzzle(6, 6, '🚀', '🌟');
+      return { type: 'grid', question: 'Plan your route carefully to reach the star!', puzzle, showLoops: true };
+    }
+    case 6: { // Functions concept
+      const puzzle = generateGridPuzzle(6, 5, '🏎️', '🏆');
+      return { type: 'grid', question: 'Race to the trophy! Build your sequence.', puzzle, showLoops: true };
+    }
+    default: return generateSethCode(1);
+  }
+}
+
+function generateBugFix() {
+  const bugs = [
+    { desc: 'This program should count to 5, but something is wrong:', code: ['Start at 1','Add 1','Add 1','Add 3','Add 1'], bugIdx: 3, fix: 'Add 1', question: 'Which step is the bug? Tap it!' },
+    { desc: 'This program should make a pattern: 🔴🔵🔴🔵, but there is a mistake:', code: ['🔴','🔵','🔴','🔴'], bugIdx: 3, fix: '🔵', question: 'Which step is wrong? Tap it!' },
+    { desc: 'To go RIGHT 3 times we need: →→→, but there is a bug:', code: ['→','→','↓'], bugIdx: 2, fix: '→', question: 'Which arrow is wrong? Tap it!' },
+    { desc: 'This should go: DOWN, DOWN, RIGHT, RIGHT. Find the bug:', code: ['↓','↓','↓','→'], bugIdx: 2, fix: '→', question: 'Which step is the bug?' },
+  ];
+  const bug = pickOne(bugs);
+  return { type: 'bugfix', question: bug.question, description: bug.desc, code: bug.code, bugIdx: bug.bugIdx, fix: bug.fix };
+}
+
+
+// ===== EXPLORER MODULE =====
+const EXPLORER_CARDS = [
+  { icon: '🚗', title: 'How Do Cars Work?',
+    brooke: 'A car has an engine inside. The engine burns gasoline to make the wheels spin really fast — zoom!',
+    seth: 'A car engine burns gasoline in small explosions inside metal cylinders. These push pistons up and down, which spin a crankshaft connected to your wheels through a transmission. That\'s why you hear "vroom" — it\'s tiny explosions!',
+    fact: 'A car engine can make 1,000 tiny explosions every second!' },
+  { icon: '🚒', title: 'How Do Fire Trucks Work?',
+    brooke: 'Fire trucks carry water in a big tank. A special pump pushes the water through the hose really fast to put out fires!',
+    seth: 'Fire trucks have a pump that can push 1,500 gallons of water per minute through their hoses. The ladder truck can extend over 100 feet tall — that\'s as high as a 10-story building. Firefighters use thermal cameras to see through smoke!',
+    fact: 'The biggest fire truck ladders are over 100 feet tall!' },
+  { icon: '🚀', title: 'How Do Rockets Fly?',
+    brooke: 'Rockets push fire out the bottom really hard, and that pushes the rocket up into space!',
+    seth: 'Rockets work by Newton\'s Third Law: for every action, there\'s an equal reaction. Burning fuel shoots hot gas downward at thousands of miles per hour, which pushes the rocket upward. A rocket must go over 17,000 mph to stay in orbit!',
+    fact: 'Rocket fuel burns at over 5,000°F — hotter than lava!' },
+  { icon: '🌧️', title: 'Where Does Rain Come From?',
+    brooke: 'The sun warms up water in oceans and lakes. The water floats up and becomes clouds. When clouds get too full, the water falls back down as rain!',
+    seth: 'Water evaporates from oceans, lakes, and rivers when the sun heats them. This water vapor rises, cools, and condenses around tiny dust particles to form cloud droplets. When millions of droplets combine and get heavy enough, they fall as rain.',
+    fact: 'A single rain cloud can hold over 1 million pounds of water!' },
+  { icon: '🌈', title: 'What Makes a Rainbow?',
+    brooke: 'When sunlight goes through raindrops, it splits into all the colors! That makes the rainbow you see in the sky.',
+    seth: 'White sunlight is actually made of all colors mixed together. When light enters a raindrop, it bends (refracts), bounces off the back of the drop, and bends again coming out — splitting into red, orange, yellow, green, blue, indigo, and violet.',
+    fact: 'You can only see a rainbow when the sun is behind you and rain is in front of you!' },
+  { icon: '💻', title: 'How Do Computers Think?',
+    brooke: 'Computers use tiny switches that are either ON or OFF. By flipping millions of switches really fast, they can do math and show pictures!',
+    seth: 'Computers think using billions of tiny transistors that can be on (1) or off (0) — that\'s binary. Everything you see on screen is just patterns of 1s and 0s! A modern computer can do billions of calculations every second.',
+    fact: 'Your tablet has more computing power than all of NASA had when they sent astronauts to the moon!' },
+  { icon: '🍃', title: 'Why Do Leaves Change Color?',
+    brooke: 'In fall, leaves stop making green color. Then the yellow, orange, and red colors that were hiding inside can finally show!',
+    seth: 'Leaves are green because of chlorophyll, which helps them make food from sunlight. In fall, trees stop making chlorophyll, and other pigments show through: carotenoids (yellow/orange) and anthocyanins (red/purple).',
+    fact: 'Leaves don\'t actually "turn" colors — the other colors were there all along, just hidden by green!' },
+  { icon: '🌋', title: 'What\'s Inside a Volcano?',
+    brooke: 'Deep underground, rocks get so hot they melt into liquid! When enough melted rock builds up, it pushes up and comes out the top — that\'s an eruption!',
+    seth: 'Miles beneath Earth\'s surface, extreme heat and pressure melt rock into magma. When pressure builds up, magma forces its way through cracks to the surface. Once it erupts, we call it lava. It can reach 2,200°F!',
+    fact: 'There are about 1,500 active volcanoes on Earth — and we\'ve found some on Mars too!' },
+  { icon: '🌊', title: 'Why Is the Ocean Salty?',
+    brooke: 'Rivers wash tiny bits of salt from rocks into the ocean. Over millions of years, all that salt built up!',
+    seth: 'When rain falls on rocks, it slowly dissolves minerals including sodium and chloride — the ingredients of salt. Rivers carry these minerals to the ocean. Over billions of years, the salt concentrated because water evaporates from the ocean, but the salt stays behind.',
+    fact: 'If you could take all the salt out of the ocean, it would cover all the land on Earth 500 feet deep!' },
+  { icon: '🌙', title: 'Why Does the Moon Change Shape?',
+    brooke: 'The moon doesn\'t really change! The sun lights up different parts of it as it goes around the Earth.',
+    seth: 'The moon doesn\'t make its own light — it reflects sunlight. As the moon orbits Earth (about every 29 days), we see different amounts of its lit side. A full moon means the sun is lighting the whole side facing us.',
+    fact: 'The same side of the moon always faces Earth — no one saw the far side until a spacecraft flew around it in 1959!' },
+  { icon: '🏗️', title: 'How Do Bridges Stay Up?',
+    brooke: 'Bridges push their weight down into strong pillars that hold everything up. The shape of the bridge helps it stay strong!',
+    seth: 'Bridges use forces called compression (pushing) and tension (pulling). An arch bridge pushes weight outward into its supports. Suspension bridges hang from cables in tension, held by tall towers. Engineers test how much weight a bridge can hold before building it.',
+    fact: 'The longest bridge in the world is over 100 miles long — it\'s in China!' },
+  { icon: '⚡', title: 'What Is Lightning?',
+    brooke: 'Inside storm clouds, tiny bits of ice bump into each other and make electricity. When enough builds up — ZAP! — it jumps to the ground!',
+    seth: 'Lightning happens when ice particles in storm clouds collide, creating static electricity. The top of the cloud gets a positive charge and the bottom gets negative. When the charge difference gets big enough, electricity discharges — heating the air to 54,000°F, five times hotter than the sun\'s surface!',
+    fact: 'Lightning strikes Earth about 100 times every second!' },
+  { icon: '🦕', title: 'What Happened to the Dinosaurs?',
+    brooke: 'A giant space rock crashed into Earth a long time ago. It made so much dust that it blocked the sun, and the dinosaurs couldn\'t survive.',
+    seth: 'About 66 million years ago, an asteroid 6 miles wide struck Mexico\'s Yucatan Peninsula at 45,000 mph. The impact created a 110-mile-wide crater, triggered tsunamis, earthquakes, and threw so much dust into the atmosphere that it blocked sunlight for months.',
+    fact: 'Birds are actually living dinosaurs! They evolved from small feathered dinosaurs.' },
+  { icon: '🧲', title: 'How Do Magnets Work?',
+    brooke: 'Some special metals can push and pull other metals without touching them! Every magnet has two sides — one pushes and one pulls.',
+    seth: 'Magnets work because of electrons spinning inside atoms. In magnetic materials like iron, groups of atoms align their electron spins in the same direction, creating a magnetic field. Opposite poles attract because their fields flow together; same poles repel because they push apart.',
+    fact: 'Earth itself is a giant magnet! That\'s why compasses point north.' },
+  { icon: '🔭', title: 'How Far Away Are Stars?',
+    brooke: 'Stars are really, really far away! The light from stars takes years and years to reach us, even though light is the fastest thing ever.',
+    seth: 'The nearest star besides our sun is Proxima Centauri, about 4.24 light-years away. That means the light you see from it left that star over 4 years ago! Light travels at 186,000 miles per second. Our galaxy alone has over 100 billion stars.',
+    fact: 'Some stars you see at night might have already exploded — their light just hasn\'t stopped reaching us yet!' },
+];
+
+function renderExplorer() {
+  const p = getProfile();
+  const mod = p.modules.explorer;
+  const t = getTheme();
+  const unlocked = mod.cardsUnlocked || 3;
+
+  app().innerHTML = `
+    <div class="activity-screen">
+      <div class="activity-header ${t === 'seth' ? 'seth-theme' : 'brooke-theme'}" style="background: linear-gradient(135deg, ${isSeth() ? '#4a148c, #ab47bc' : '#00838f, #4dd0e1'});">
+        <button class="back-btn" onclick="goHome()">←</button>
+        <div class="activity-info">
+          <div class="activity-title">🔬 Explorer</div>
+          <div class="activity-level">${(mod.cardsViewed||[]).length}/${EXPLORER_CARDS.length} discovered</div>
+        </div>
+        <div class="activity-stars">⭐ ${p.totalStars}</div>
+      </div>
+      <div class="activity-body" style="justify-content: flex-start; padding-top: 12px; background: ${isSeth() ? 'var(--seth-bg)' : 'var(--brooke-bg)'};">
+        <div class="explorer-grid" style="width:100%; max-width:600px;">
+          ${EXPLORER_CARDS.map((card, i) => {
+            const isLocked = i >= unlocked;
+            const viewed = (mod.cardsViewed||[]).includes(i);
+            return `<div class="explorer-mini ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `viewExplorerCard(${i})`}">
+              <div class="mini-icon">${card.icon}</div>
+              <div class="mini-title">${card.title}</div>
+              ${viewed ? '<div style="color:var(--correct-green);font-size:0.8em;">✅ Read</div>' : ''}
+              ${isLocked ? '<div>🔒</div>' : ''}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="text-align:center;margin-top:16px;opacity:0.6;font-size:0.9em;">
+          Earn ⭐ stars in other modules to unlock more cards!
+        </div>
+      </div>
+    </div>`;
+}
+
+function viewExplorerCard(idx) {
+  Sound.click();
+  const p = getProfile();
+  const mod = p.modules.explorer;
+  if (!mod.cardsViewed) mod.cardsViewed = [];
+  if (!mod.cardsViewed.includes(idx)) { mod.cardsViewed.push(idx); }
+  saveState();
+
+  const card = EXPLORER_CARDS[idx];
+  const t = getTheme();
+  const text = isSeth() ? card.seth : card.brooke;
+
+  app().innerHTML = `
+    <div class="activity-screen">
+      <div class="activity-header ${t === 'seth' ? 'seth-theme' : 'brooke-theme'}" style="background: linear-gradient(135deg, ${isSeth() ? '#4a148c, #ab47bc' : '#00838f, #4dd0e1'});">
+        <button class="back-btn" onclick="renderExplorer()">←</button>
+        <div class="activity-info">
+          <div class="activity-title">🔬 Explorer</div>
+        </div>
+        <div></div>
+      </div>
+      <div class="activity-body" style="background: ${isSeth() ? 'var(--seth-bg)' : 'var(--brooke-bg)'};">
+        <div class="explorer-card" style="cursor:default;">
+          <div class="card-icon">${card.icon}</div>
+          <div class="card-title">${card.title}</div>
+          <div class="card-body">${text}</div>
+          <div class="card-fact">💡 Did you know? ${card.fact}</div>
+        </div>
+        <button class="next-btn ${t}-theme" onclick="renderExplorer()">Back to Explorer</button>
+      </div>
+    </div>`;
+}
+
+
+// ===== RENDER ACTIVITY =====
+let currentQuestion = null;
+let answered = false;
+let spellingState = null;
+let gridState = null;
+let sortingState = null;
+let sequenceState = null;
+
+function renderActivity() {
+  answered = false;
+  spellingState = null;
+  gridState = null;
+  sortingState = null;
+  sequenceState = null;
+  questionCount++;
+  const p = getProfile();
+  const mod = p.modules[currentModule];
+  const t = getTheme();
+
+  let q;
+  if (currentModule === 'math') q = generateMathQuestion();
+  else if (currentModule === 'reading') q = generateReadingQuestion();
+  else if (currentModule === 'code') q = generateCodeQuestion();
+  currentQuestion = q;
+
+  const modNames = { math: '🔢 Math', reading: '📖 Reading', code: '💻 Code Lab' };
+  const headerColors = {
+    'seth-math': '#1565c0, #42a5f5', 'seth-reading': '#e65100, #ff9800',
+    'seth-code': '#1b5e20, #66bb6a', 'brooke-math': '#e91e63, #f48fb1',
+    'brooke-reading': '#9c27b0, #ce93d8', 'brooke-code': '#d32f2f, #ef5350'
+  };
+  const hc = headerColors[`${t}-${currentModule}`] || '#333, #555';
+
+  let bodyContent = '';
+  if (q.type === 'choice') bodyContent = renderChoiceQuestion(q);
+  else if (q.type === 'spelling') bodyContent = renderSpellingQuestion(q);
+  else if (q.type === 'pattern') bodyContent = renderPatternQuestion(q);
+  else if (q.type === 'sequence') bodyContent = renderSequenceQuestion(q);
+  else if (q.type === 'sorting') bodyContent = renderSortingQuestion(q);
+  else if (q.type === 'grid') bodyContent = renderGridQuestion(q);
+  else if (q.type === 'bugfix') bodyContent = renderBugfixQuestion(q);
+
+  const bg = isSeth() ? 'var(--seth-bg)' : 'var(--brooke-bg)';
+
+  app().innerHTML = `
+    <div class="activity-screen">
+      <div class="activity-header" style="background: linear-gradient(135deg, ${hc});">
+        <button class="back-btn" onclick="goHome()">←</button>
+        <div class="activity-info">
+          <div class="activity-title">${modNames[currentModule]}</div>
+          <div class="activity-level">Level ${mod.level}</div>
+        </div>
+        <div class="activity-stars">⭐ ${mod.starsInModule}</div>
+      </div>
+      <div class="activity-body" style="background: ${bg};">
+        ${bodyContent}
+      </div>
+    </div>`;
+
+  if (q.type === 'grid') initGrid();
+  if (q.type === 'sequence') initSequence();
+  if (q.type === 'sorting') initSorting();
+  if (q.type === 'spelling') initSpelling();
+}
+
+function renderChoiceQuestion(q) {
+  const cols = q.cols || (q.options.length <= 2 ? 2 : (q.options.length === 3 ? 3 : 4));
+  return `
+    <div class="question-area">
+      ${q.storyText ? `<div style="text-align:left;background:white;padding:16px;border-radius:12px;margin-bottom:16px;font-size:1.15em;line-height:1.6;box-shadow:var(--shadow);">${q.storyText}</div>
+        <div class="question-text">${q.storyQ}</div>` :
+        `<div class="question-text">${q.question}</div>`}
+      ${q.visual ? `<div class="visual-area">${q.visual}</div>` : ''}
+    </div>
+    <div class="answers-grid cols-${Math.min(cols, 4)}">
+      ${q.options.map((opt, i) => `<button class="answer-btn" onclick="handleChoice(this, '${opt.replace(/'/g, "\\'")}', '${q.answer.replace(/'/g, "\\'")}')">${opt}</button>`).join('')}
+    </div>`;
+}
+
+function handleChoice(btn, selected, answer) {
+  if (answered) return;
+  answered = true;
+  const correct = selected === answer;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  document.querySelectorAll('.answer-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b.textContent === answer || b.innerText === answer) b.classList.add('correct');
+  });
+  recordAnswer(correct);
+  setTimeout(() => renderActivity(), correct ? 1200 : 1800);
+}
+
+function renderSpellingQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+      <div class="visual-area">${q.visual}</div>
+    </div>
+    <div class="spelling-area">
+      <div class="spelling-word" id="spelling-slots">
+        ${q.targetWord.split('').map((_, i) => `<div class="spelling-slot" data-idx="${i}"></div>`).join('')}
+      </div>
+      <div class="letter-choices" id="letter-choices">
+        ${q.letters.map((l, i) => `<button class="letter-btn" data-letter="${l}" data-idx="${i}" onclick="handleSpellingLetter(this)">${l}</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function initSpelling() {
+  spellingState = { filled: [], target: currentQuestion.targetWord };
+}
+
+function handleSpellingLetter(btn) {
+  if (answered || !spellingState) return;
+  Sound.click();
+  const letter = btn.dataset.letter;
+  const idx = spellingState.filled.length;
+  if (idx >= spellingState.target.length) return;
+
+  spellingState.filled.push(letter);
+  btn.classList.add('used');
+
+  const slot = document.querySelectorAll('.spelling-slot')[idx];
+  slot.textContent = letter;
+  slot.classList.add('filled');
+
+  if (spellingState.filled.length === spellingState.target.length) {
+    answered = true;
+    const correct = spellingState.filled.join('') === spellingState.target;
+    recordAnswer(correct);
+    if (correct) {
+      document.querySelectorAll('.spelling-slot').forEach(s => s.style.borderColor = 'var(--correct-green)');
+    } else {
+      document.querySelectorAll('.spelling-slot').forEach((s, i) => {
+        s.style.borderColor = spellingState.filled[i] === spellingState.target[i] ? 'var(--correct-green)' : 'var(--wrong-red)';
+      });
+    }
+    setTimeout(() => renderActivity(), 1800);
+  }
+}
+
+function renderPatternQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+      <div class="visual-area">${q.sequence.join(' ')} <span style="opacity:0.3;animation:pulse 1s infinite;">?</span></div>
+    </div>
+    <div class="pattern-options">
+      ${q.options.map(opt => `<button class="pattern-btn" onclick="handlePattern(this, '${opt}', '${q.answer}')">${opt}</button>`).join('')}
+    </div>`;
+}
+
+function handlePattern(btn, selected, answer) {
+  if (answered) return;
+  answered = true;
+  const correct = selected === answer;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  recordAnswer(correct);
+  setTimeout(() => renderActivity(), 1200);
+}
+
+function renderSequenceQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+    </div>
+    <div style="width:100%;max-width:500px;">
+      <div class="drop-slots" id="drop-slots">
+        ${q.items.map((_, i) => `<div class="drop-slot" data-idx="${i}"></div>`).join('')}
+      </div>
+      <div class="question-sub">Tap items in the right order:</div>
+      <div class="sequence-area" id="seq-items">
+        ${shuffle(q.items.map((item, i) => ({item, origIdx: i}))).map(({item, origIdx}) =>
+          `<div class="seq-item" data-orig="${origIdx}" onclick="handleSequenceItem(this, ${origIdx})">${item}</div>`
+        ).join('')}
+      </div>
+    </div>`;
+}
+
+function initSequence() {
+  sequenceState = { placed: [], order: currentQuestion.order };
+}
+
+function handleSequenceItem(el, origIdx) {
+  if (answered || !sequenceState) return;
+  Sound.click();
+  if (el.classList.contains('placed')) return;
+
+  const slotIdx = sequenceState.placed.length;
+  if (slotIdx >= currentQuestion.items.length) return;
+
+  sequenceState.placed.push(origIdx);
+  el.classList.add('placed');
+
+  const slot = document.querySelectorAll('.drop-slot')[slotIdx];
+  slot.textContent = currentQuestion.items[origIdx];
+  slot.classList.add('filled');
+
+  if (sequenceState.placed.length === currentQuestion.items.length) {
+    answered = true;
+    const correct = sequenceState.placed.every((v, i) => v === sequenceState.order[i]);
+    recordAnswer(correct);
+    setTimeout(() => renderActivity(), 1500);
+  }
+}
+
+function renderSortingQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+    </div>
+    <div class="answers-grid cols-3" id="sort-grid">
+      ${q.items.map((item, i) => `<button class="answer-btn" data-idx="${i}" data-good="${item.g}" onclick="handleSortItem(this)">${item.e}</button>`).join('')}
+    </div>
+    <button class="next-btn ${getTheme()}-theme" id="sort-check" style="display:none;" onclick="checkSorting()">Check!</button>`;
+}
+
+function initSorting() {
+  sortingState = { selected: new Set() };
+}
+
+function handleSortItem(btn) {
+  if (answered) return;
+  Sound.click();
+  const idx = parseInt(btn.dataset.idx);
+  if (sortingState.selected.has(idx)) {
+    sortingState.selected.delete(idx);
+    btn.classList.remove('highlight');
+  } else {
+    sortingState.selected.add(idx);
+    btn.classList.add('highlight');
+  }
+  const checkBtn = document.getElementById('sort-check');
+  if (checkBtn) checkBtn.style.display = sortingState.selected.size > 0 ? 'block' : 'none';
+}
+
+function checkSorting() {
+  if (answered) return;
+  answered = true;
+  const items = currentQuestion.items;
+  const correct = items.every((item, i) =>
+    (item.g && sortingState.selected.has(i)) || (!item.g && !sortingState.selected.has(i))
+  );
+  document.querySelectorAll('#sort-grid .answer-btn').forEach((btn, i) => {
+    if (items[i].g) btn.classList.add('correct');
+    else if (sortingState.selected.has(i)) btn.classList.add('wrong');
+  });
+  recordAnswer(correct);
+  setTimeout(() => renderActivity(), 1800);
+}
+
+function renderBugfixQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+      <div class="question-sub">${q.description}</div>
+    </div>
+    <div class="sequence-area" id="bugfix-code">
+      ${q.code.map((step, i) =>
+        `<div class="seq-item" onclick="handleBugfix(${i})" style="cursor:pointer;">${i + 1}. ${step}</div>`
+      ).join('')}
+    </div>`;
+}
+
+function handleBugfix(idx) {
+  if (answered) return;
+  answered = true;
+  Sound.click();
+  const correct = idx === currentQuestion.bugIdx;
+  const items = document.querySelectorAll('#bugfix-code .seq-item');
+  items[currentQuestion.bugIdx].style.background = '#ffcdd2';
+  items[currentQuestion.bugIdx].style.border = '2px solid var(--wrong-red)';
+  items[currentQuestion.bugIdx].innerHTML += ` → <strong>${currentQuestion.fix}</strong>`;
+  if (correct) {
+    items[idx].style.background = '#c8e6c9';
+    items[idx].style.border = '2px solid var(--correct-green)';
+  }
+  recordAnswer(correct);
+  setTimeout(() => renderActivity(), 2000);
+}
+
+
+// ===== GRID / CODE LAB GAME =====
+function renderGridQuestion(q) {
+  const p = q.puzzle;
+  const gridHTML = renderGrid(p);
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+    </div>
+    <div class="code-lab-area">
+      <div id="code-grid-container">${gridHTML}</div>
+      <div class="command-queue" id="cmd-queue"><span style="opacity:0.4;">Tap arrows to build your path</span></div>
+      <div class="command-bar">
+        <button class="cmd-btn" onclick="addCommand('up')">⬆️</button>
+        <button class="cmd-btn" onclick="addCommand('down')">⬇️</button>
+        <button class="cmd-btn" onclick="addCommand('left')">⬅️</button>
+        <button class="cmd-btn" onclick="addCommand('right')">➡️</button>
+        <button class="cmd-btn clear" onclick="clearCommands()">Clear</button>
+        <button class="cmd-btn run" onclick="runCommands()">▶ Run</button>
+      </div>
+    </div>`;
+}
+
+function renderGrid(p) {
+  const cells = [];
+  for (let r = 0; r < p.size; r++) {
+    for (let c = 0; c < p.size; c++) {
+      let content = '';
+      let cls = 'code-cell';
+      if (gridState && gridState.pos.r === r && gridState.pos.c === c) {
+        content = p.charEmoji;
+        cls += ' character';
+      } else if (r === p.start.r && c === p.start.c && !gridState) {
+        content = p.charEmoji;
+        cls += ' character';
+      } else if (r === p.goal.r && c === p.goal.c) {
+        content = p.goalEmoji;
+        cls += ' goal';
+      } else if (p.grid[r][c] === 1) {
+        content = '🧱';
+        cls += ' wall';
+      }
+      cells.push(`<div class="${cls}">${content}</div>`);
+    }
+  }
+  return `<div class="code-grid" style="grid-template-columns:repeat(${p.size}, 48px);">${cells.join('')}</div>`;
+}
+
+function initGrid() {
+  const p = currentQuestion.puzzle;
+  gridState = {
+    pos: { ...p.start },
+    commands: [],
+    running: false,
+    puzzle: p
+  };
+}
+
+function addCommand(dir) {
+  if (!gridState || gridState.running || answered) return;
+  Sound.click();
+  const arrows = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
+  gridState.commands.push(dir);
+  const queue = document.getElementById('cmd-queue');
+  queue.innerHTML = gridState.commands.map((c, i) =>
+    `<div class="queue-item">${arrows[c]}</div>`
+  ).join('');
+}
+
+function clearCommands() {
+  if (!gridState || gridState.running || answered) return;
+  Sound.click();
+  gridState.commands = [];
+  gridState.pos = { ...gridState.puzzle.start };
+  const queue = document.getElementById('cmd-queue');
+  queue.innerHTML = '<span style="opacity:0.4;">Tap arrows to build your path</span>';
+  refreshGrid();
+}
+
+function refreshGrid() {
+  const container = document.getElementById('code-grid-container');
+  if (container) container.innerHTML = renderGrid(gridState.puzzle);
+}
+
+async function runCommands() {
+  if (!gridState || gridState.running || answered || gridState.commands.length === 0) return;
+  gridState.running = true;
+  gridState.pos = { ...gridState.puzzle.start };
+
+  const dirs = { up: {r:-1,c:0}, down: {r:1,c:0}, left: {r:0,c:-1}, right: {r:0,c:1} };
+  const p = gridState.puzzle;
+  let reached = false;
+
+  for (let i = 0; i < gridState.commands.length; i++) {
+    // Highlight current command
+    const queueItems = document.querySelectorAll('.queue-item');
+    queueItems.forEach((qi, j) => qi.classList.toggle('active', j === i));
+
+    const d = dirs[gridState.commands[i]];
+    const newR = gridState.pos.r + d.r;
+    const newC = gridState.pos.c + d.c;
+
+    if (newR >= 0 && newR < p.size && newC >= 0 && newC < p.size && p.grid[newR][newC] !== 1) {
+      gridState.pos = { r: newR, c: newC };
+    }
+    refreshGrid();
+    await new Promise(r => setTimeout(r, 350));
+
+    if (gridState.pos.r === p.goal.r && gridState.pos.c === p.goal.c) {
+      reached = true;
+      break;
+    }
+  }
+
+  answered = true;
+  recordAnswer(reached);
+
+  if (reached) {
+    showFeedback('🎉', 'You did it!');
+  } else {
+    showFeedback('', 'Try a different path!');
+  }
+
+  setTimeout(() => {
+    gridState = null;
+    renderActivity();
+  }, reached ? 1500 : 2000);
+}
+
+// ===== INITIALIZATION =====
+loadState();
+renderProfileSelect();
+
+</script>
+</body>
+</html>
