@@ -210,6 +210,18 @@ body {
   font-size: 1.2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 .queue-item.active { background: #bbdefb; }
+.queue-item.helper { background: #f3e5f5; }
+.cmd-btn.repeat { background: #fff8e1; border-color: #ffb300; font-weight: 800; font-size: 1em; width: auto; padding: 0 12px; }
+.cmd-btn.helper { background: #f3e5f5; border-color: #8e24aa; font-size: 1.6em; }
+.cmd-btn.new { background: #e3f2fd; border-color: #1565c0; font-size: 1em; font-weight: 700; width: auto; padding: 0 12px; }
+.code-cell.target { background: #e3f2fd; outline: 3px dashed #42a5f5; outline-offset: -4px; }
+.code-cell.painted { background: #ffcc80; }
+.code-cell.painted.target { outline: 3px dashed #2e7d32; }
+.code-cell.tappable { cursor: pointer; }
+.phase-banner {
+  background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px;
+  padding: 10px 14px; margin: 10px auto 0; font-size: 1.05em; max-width: 500px;
+}
 
 /* Explorer Cards */
 .explorer-area { width: 100%; max-width: 500px; }
@@ -492,7 +504,7 @@ function getProfile() { return state.profiles[state.currentProfile]; }
 function isSeth() { return state.currentProfile === 'seth'; }
 function getTheme() { return isSeth() ? 'seth' : 'brooke'; }
 function getMaxLevel(module) {
-  const max = { math: isSeth() ? 7 : 5, reading: isSeth() ? 6 : 5, code: isSeth() ? 6 : 5 };
+  const max = { math: isSeth() ? 7 : 5, reading: isSeth() ? 6 : 5, code: isSeth() ? 9 : 5 };
   return max[module] || 5;
 }
 
@@ -1211,6 +1223,16 @@ function generateSethCode(level) {
       const puzzle = generateGridPuzzle(6, 5, '🏎️', '🏆');
       return { type: 'grid', question: 'Race to the trophy! Build your sequence.', puzzle, showLoops: true };
     }
+    case 7: { // Draw with code: paint shapes with repeat blocks
+      const shape = pickOne(DRAW_SHAPES);
+      return { type: 'draw', question: `Paint ${shape.name}! Follow the blue outline.`, shape };
+    }
+    case 8: { // Real functions: record a helper, reuse it
+      return { type: 'func', question: 'Make a helper move!' };
+    }
+    case 9: { // Free-drive sandbox
+      return { type: 'sandbox', question: 'Build your own track!' };
+    }
     default: return generateSethCode(1);
   }
 }
@@ -1436,6 +1458,9 @@ function renderActivity() {
   gridState = null;
   sortingState = null;
   sequenceState = null;
+  drawState = null;
+  funcState = null;
+  sandboxState = null;
   if (readAloudState && readAloudState.recognition) {
     try { readAloudState.recognition.abort(); } catch(e) {}
   }
@@ -1450,6 +1475,9 @@ function renderActivity() {
   else if (currentModule === 'reading') q = generateReadingQuestion();
   else if (currentModule === 'code') q = generateCodeQuestion();
   currentQuestion = q;
+  if (q.type === 'draw') initDraw();
+  else if (q.type === 'func') initFunc();
+  else if (q.type === 'sandbox') initSandbox();
 
   const modNames = { math: '🔢 Math', reading: '📖 Reading', code: '💻 Code Lab' };
   const headerColors = {
@@ -1468,6 +1496,9 @@ function renderActivity() {
   else if (q.type === 'sorting') bodyContent = renderSortingQuestion(q);
   else if (q.type === 'grid') bodyContent = renderGridQuestion(q);
   else if (q.type === 'bugfix') bodyContent = renderBugfixQuestion(q);
+  else if (q.type === 'draw') bodyContent = renderDrawQuestion(q);
+  else if (q.type === 'func') bodyContent = renderFuncQuestion(q);
+  else if (q.type === 'sandbox') bodyContent = renderSandboxQuestion(q);
 
   const bg = isSeth() ? 'var(--seth-bg)' : 'var(--brooke-bg)';
 
@@ -1842,6 +1873,459 @@ async function runCommands() {
     gridState = null;
     renderActivity();
   }, reached ? 1500 : 2000);
+}
+
+// ===== CODE LAB: DRAW WITH CODE (level 7) =====
+// Car leaves a paint trail; trace the blue outline. Repeat chips teach real loops.
+const DRAW_SHAPES = [
+  { name: 'a square', cells: [[2,2],[2,3],[2,4],[3,4],[4,4],[4,3],[4,2],[3,2]] },
+  { name: 'stairs', cells: [[5,1],[5,2],[4,2],[4,3],[3,3],[3,4],[2,4],[2,5]] },
+  { name: 'the letter L', cells: [[1,3],[2,3],[3,3],[4,3],[5,3],[5,4],[5,5]] },
+  { name: 'a big square', cells: [[1,1],[1,2],[1,3],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[3,1],[2,1]] },
+];
+const DIRS4 = { up: {r:-1,c:0}, down: {r:1,c:0}, left: {r:0,c:-1}, right: {r:0,c:1} };
+const ARROWS = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
+let drawState = null;
+
+function initDraw() {
+  const shape = currentQuestion.shape;
+  const key = (r, c) => r + ',' + c;
+  const s0 = shape.cells[0];
+  drawState = {
+    shape, size: 8, cellPx: 40,
+    targets: new Set(shape.cells.map(([r, c]) => key(r, c))),
+    painted: new Set([key(s0[0], s0[1])]),
+    pos: { r: s0[0], c: s0[1] },
+    commands: [], running: false
+  };
+}
+
+function renderDrawGrid() {
+  const s = drawState;
+  const key = (r, c) => r + ',' + c;
+  const cells = [];
+  for (let r = 0; r < s.size; r++) for (let c = 0; c < s.size; c++) {
+    const k = key(r, c);
+    let cls = 'code-cell';
+    if (s.targets.has(k)) cls += ' target';
+    if (s.painted.has(k)) cls += ' painted';
+    const here = s.pos.r === r && s.pos.c === c;
+    if (here) cls += ' character';
+    cells.push(`<div class="${cls}" style="width:${s.cellPx}px;height:${s.cellPx}px;">${here ? '🏎️' : ''}</div>`);
+  }
+  return `<div class="code-grid" style="grid-template-columns:repeat(${s.size}, ${s.cellPx}px);">${cells.join('')}</div>`;
+}
+
+function drawQueueHtml() {
+  if (!drawState.commands.length) return '<span style="opacity:0.4;">Tap arrows to paint</span>';
+  return drawState.commands.map(c => `<div class="queue-item">${ARROWS[c]}</div>`).join('');
+}
+
+function renderDrawQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+      <div style="font-size:0.95em;opacity:0.75;margin-top:6px;">Tip: tap ×2 ×3 ×4 to repeat your last move!</div>
+    </div>
+    <div class="code-lab-area">
+      <div id="code-grid-container">${renderDrawGrid()}</div>
+      <div class="command-queue" id="cmd-queue">${drawQueueHtml()}</div>
+      <div class="command-bar">
+        <button class="cmd-btn" onclick="drawAdd('up')">⬆️</button>
+        <button class="cmd-btn" onclick="drawAdd('down')">⬇️</button>
+        <button class="cmd-btn" onclick="drawAdd('left')">⬅️</button>
+        <button class="cmd-btn" onclick="drawAdd('right')">➡️</button>
+        <button class="cmd-btn repeat" onclick="drawRepeat(2)">×2</button>
+        <button class="cmd-btn repeat" onclick="drawRepeat(3)">×3</button>
+        <button class="cmd-btn repeat" onclick="drawRepeat(4)">×4</button>
+        <button class="cmd-btn clear" onclick="drawClear()">Clear</button>
+        <button class="cmd-btn run" onclick="drawRun()">▶ Run</button>
+      </div>
+    </div>`;
+}
+
+function drawGridOnly() {
+  const el = document.getElementById('code-grid-container');
+  if (el) el.innerHTML = renderDrawGrid();
+}
+
+function drawQueueOnly() {
+  const el = document.getElementById('cmd-queue');
+  if (el) el.innerHTML = drawQueueHtml();
+}
+
+function drawAdd(dir) {
+  if (!drawState || drawState.running || answered || drawState.commands.length >= 60) return;
+  Sound.click();
+  drawState.commands.push(dir);
+  drawQueueOnly();
+}
+
+function drawRepeat(n) {
+  if (!drawState || drawState.running || answered) return;
+  const last = drawState.commands[drawState.commands.length - 1];
+  if (!last) { showFeedback('👆', 'Tap an arrow first!'); return; }
+  Sound.click();
+  for (let i = 0; i < n && drawState.commands.length < 60; i++) drawState.commands.push(last);
+  drawQueueOnly();
+}
+
+function drawClear() {
+  if (!drawState || drawState.running || answered) return;
+  Sound.click();
+  const s = drawState;
+  const s0 = s.shape.cells[0];
+  s.commands = [];
+  s.pos = { r: s0[0], c: s0[1] };
+  s.painted = new Set([s0[0] + ',' + s0[1]]);
+  drawGridOnly();
+  drawQueueOnly();
+}
+
+async function drawRun() {
+  const s = drawState;
+  if (!s || s.running || answered || s.commands.length === 0) return;
+  s.running = true;
+  for (let i = 0; i < s.commands.length; i++) {
+    document.querySelectorAll('.queue-item').forEach((qi, j) => qi.classList.toggle('active', j === i));
+    const d = DIRS4[s.commands[i]];
+    const nr = s.pos.r + d.r, nc = s.pos.c + d.c;
+    if (nr >= 0 && nr < s.size && nc >= 0 && nc < s.size) {
+      s.pos = { r: nr, c: nc };
+      s.painted.add(nr + ',' + nc);
+    }
+    drawGridOnly();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  s.running = false;
+  const done = [...s.targets].every(k => s.painted.has(k));
+  answered = true;
+  recordAnswer(done);
+  if (done) {
+    showFeedback('🎉', 'Beautiful painting!');
+    setTimeout(() => { drawState = null; renderActivity(); }, 1500);
+  } else {
+    showFeedback('🎨', 'Almost! Try again!');
+    setTimeout(() => { drawState = null; renderActivity(); }, 2000);
+  }
+}
+
+// ===== CODE LAB: FUNCTIONS (level 8) =====
+// Record a helper move once, then call it as many times as needed.
+const FUNC_NAMES = ['🌀', '🚀', '⚡', '🌪️'];
+let funcState = null;
+
+function initFunc() {
+  funcState = {
+    size: 9, cellPx: 34,
+    start: { r: 4, c: 0 }, goal: { r: 4, c: 8 },
+    walls: new Set(['4,2', '4,4', '4,6']),
+    helperName: pickOne(FUNC_NAMES),
+    helper: [], phase: 'record',
+    commands: [], pos: { r: 4, c: 0 }, running: false
+  };
+}
+
+function renderFuncGrid() {
+  const s = funcState;
+  const key = (r, c) => r + ',' + c;
+  const cells = [];
+  for (let r = 0; r < s.size; r++) for (let c = 0; c < s.size; c++) {
+    const k = key(r, c);
+    let cls = 'code-cell', content = '';
+    if (s.walls.has(k)) { cls += ' wall'; content = '🧱'; }
+    else if (r === s.goal.r && c === s.goal.c) { cls += ' goal'; content = '🏁'; }
+    if (s.pos.r === r && s.pos.c === c) { cls += ' character'; content = '🏎️'; }
+    cells.push(`<div class="${cls}" style="width:${s.cellPx}px;height:${s.cellPx}px;font-size:1.2em;">${content}</div>`);
+  }
+  return `<div class="code-grid" style="grid-template-columns:repeat(${s.size}, ${s.cellPx}px);">${cells.join('')}</div>`;
+}
+
+function funcQueueHtml() {
+  const s = funcState;
+  if (s.phase === 'record') {
+    if (!s.helper.length) return '<span style="opacity:0.4;">Tap arrows to teach your helper</span>';
+    return s.helper.map(c => `<div class="queue-item">${ARROWS[c]}</div>`).join('');
+  }
+  if (!s.commands.length) return '<span style="opacity:0.4;">Tap arrows or your helper</span>';
+  return s.commands.map(c => c === 'FN'
+    ? `<div class="queue-item helper">${s.helperName}</div>`
+    : `<div class="queue-item">${ARROWS[c]}</div>`).join('');
+}
+
+function funcInner() {
+  const s = funcState;
+  const banner = s.phase === 'record'
+    ? `① Teach your helper <b>${s.helperName}</b>: tap arrows to drive around <b>one</b> 🧱 wall, then tap ✅`
+    : `② Reach the 🏁 flag! Tap <b>${s.helperName}</b> to run your helper move.`;
+  const arrows = ['up', 'down', 'left', 'right'].map(d =>
+    `<button class="cmd-btn" onclick="funcAdd('${d}')">${ARROWS[d]}</button>`).join('');
+  const bar = s.phase === 'record'
+    ? `${arrows}
+       <button class="cmd-btn clear" onclick="funcClear()">Clear</button>
+       <button class="cmd-btn run" onclick="funcDone()">✅ Done</button>`
+    : `${arrows}
+       <button class="cmd-btn helper" onclick="funcCall()">${s.helperName}</button>
+       <button class="cmd-btn clear" onclick="funcClear()">Clear</button>
+       <button class="cmd-btn new" onclick="funcReteach()">✏️</button>
+       <button class="cmd-btn run" onclick="funcRun()">▶ Run</button>`;
+  return `
+    <div class="question-area">
+      <div class="question-text">Make a helper move!</div>
+      <div class="phase-banner">${banner}</div>
+    </div>
+    <div class="code-lab-area">
+      <div id="code-grid-container">${renderFuncGrid()}</div>
+      <div class="command-queue" id="cmd-queue">${funcQueueHtml()}</div>
+      <div class="command-bar">${bar}</div>
+    </div>`;
+}
+
+function renderFuncQuestion(q) { return `<div id="func-root">${funcInner()}</div>`; }
+
+function refreshFunc() {
+  const el = document.getElementById('func-root');
+  if (el) el.innerHTML = funcInner();
+}
+
+function funcGridOnly() {
+  const el = document.getElementById('code-grid-container');
+  if (el) el.innerHTML = renderFuncGrid();
+}
+
+function funcAdd(dir) {
+  const s = funcState;
+  if (!s || s.running || answered) return;
+  Sound.click();
+  if (s.phase === 'record') {
+    if (s.helper.length >= 8) { showFeedback('✋', 'Helper is long enough! Tap ✅'); return; }
+    s.helper.push(dir);
+  } else {
+    if (s.commands.length >= 40) return;
+    s.commands.push(dir);
+  }
+  refreshFunc();
+}
+
+function funcCall() {
+  const s = funcState;
+  if (!s || s.running || answered || s.phase !== 'use' || s.commands.length >= 40) return;
+  Sound.click();
+  s.commands.push('FN');
+  refreshFunc();
+}
+
+function funcClear() {
+  const s = funcState;
+  if (!s || s.running || answered) return;
+  Sound.click();
+  if (s.phase === 'record') s.helper = [];
+  else { s.commands = []; s.pos = { ...s.start }; }
+  refreshFunc();
+}
+
+function funcDone() {
+  const s = funcState;
+  if (!s || s.running || answered || s.phase !== 'record') return;
+  if (!s.helper.length) { showFeedback('👆', 'Record at least one move first!'); return; }
+  Sound.click();
+  s.phase = 'use';
+  refreshFunc();
+}
+
+function funcReteach() {
+  const s = funcState;
+  if (!s || s.running || answered) return;
+  Sound.click();
+  s.phase = 'record';
+  s.helper = [];
+  s.commands = [];
+  s.pos = { ...s.start };
+  refreshFunc();
+}
+
+async function funcRun() {
+  const s = funcState;
+  if (!s || s.running || answered || s.phase !== 'use' || s.commands.length === 0) return;
+  s.running = true;
+  s.pos = { ...s.start };
+  const expanded = [];
+  s.commands.forEach((c, i) => {
+    if (c === 'FN') s.helper.forEach(h => expanded.push({ d: h, top: i }));
+    else expanded.push({ d: c, top: i });
+  });
+  const items = document.querySelectorAll('#func-root .queue-item');
+  let reached = false;
+  for (const step of expanded) {
+    items.forEach((qi, j) => qi.classList.toggle('active', j === step.top));
+    const d = DIRS4[step.d];
+    const nr = s.pos.r + d.r, nc = s.pos.c + d.c;
+    if (nr >= 0 && nr < s.size && nc >= 0 && nc < s.size && !s.walls.has(nr + ',' + nc)) {
+      s.pos = { r: nr, c: nc };
+    }
+    funcGridOnly();
+    await new Promise(r => setTimeout(r, 260));
+    if (s.pos.r === s.goal.r && s.pos.c === s.goal.c) { reached = true; break; }
+  }
+  s.running = false;
+  answered = true;
+  recordAnswer(reached);
+  if (reached) {
+    showFeedback('🎉', 'You used a helper like a real programmer!');
+    setTimeout(() => { funcState = null; renderActivity(); }, 1800);
+  } else {
+    showFeedback('', 'Try a different plan!');
+    setTimeout(() => { funcState = null; renderActivity(); }, 2000);
+  }
+}
+
+// ===== CODE LAB: FREE-DRIVE SANDBOX (level 9) =====
+// Build your own track: tap cells to place walls/stars, then program the car.
+let sandboxState = null;
+
+function initSandbox() {
+  sandboxState = {
+    size: 8, cellPx: 40,
+    start: { r: 0, c: 0 },
+    walls: new Set(), stars: new Set(),
+    pos: { r: 0, c: 0 },
+    commands: [], running: false, collected: 0
+  };
+}
+
+function renderSandboxGrid() {
+  const s = sandboxState;
+  const key = (r, c) => r + ',' + c;
+  const cells = [];
+  for (let r = 0; r < s.size; r++) for (let c = 0; c < s.size; c++) {
+    const k = key(r, c);
+    let cls = 'code-cell tappable', content = '';
+    if (s.walls.has(k)) { cls += ' wall'; content = '🧱'; }
+    else if (s.stars.has(k)) { content = '⭐'; }
+    if (s.pos.r === r && s.pos.c === c) { cls += ' character'; content = '🏎️'; }
+    cells.push(`<div class="${cls}" style="width:${s.cellPx}px;height:${s.cellPx}px;" onclick="sandboxTap(${r},${c})">${content}</div>`);
+  }
+  return `<div class="code-grid" style="grid-template-columns:repeat(${s.size}, ${s.cellPx}px);">${cells.join('')}</div>`;
+}
+
+function sandboxQueueHtml() {
+  if (!sandboxState.commands.length) return '<span style="opacity:0.4;">Tap arrows to drive</span>';
+  return sandboxState.commands.map(c => `<div class="queue-item">${ARROWS[c]}</div>`).join('');
+}
+
+function renderSandboxQuestion(q) {
+  return `
+    <div class="question-area">
+      <div class="question-text">${q.question}</div>
+      <div style="font-size:0.95em;opacity:0.75;margin-top:6px;">Tap a square to add a 🧱 wall or ⭐ star. Then program your car!</div>
+    </div>
+    <div class="code-lab-area">
+      <div id="code-grid-container">${renderSandboxGrid()}</div>
+      <div class="command-queue" id="cmd-queue">${sandboxQueueHtml()}</div>
+      <div class="command-bar">
+        <button class="cmd-btn" onclick="sandboxAdd('up')">⬆️</button>
+        <button class="cmd-btn" onclick="sandboxAdd('down')">⬇️</button>
+        <button class="cmd-btn" onclick="sandboxAdd('left')">⬅️</button>
+        <button class="cmd-btn" onclick="sandboxAdd('right')">➡️</button>
+        <button class="cmd-btn repeat" onclick="sandboxRepeat(2)">×2</button>
+        <button class="cmd-btn repeat" onclick="sandboxRepeat(3)">×3</button>
+        <button class="cmd-btn repeat" onclick="sandboxRepeat(4)">×4</button>
+        <button class="cmd-btn clear" onclick="sandboxClear()">Clear</button>
+        <button class="cmd-btn new" onclick="sandboxNew()">🧹 New</button>
+        <button class="cmd-btn run" onclick="sandboxRun()">▶ Run</button>
+      </div>
+    </div>`;
+}
+
+function sandboxGridOnly() {
+  const el = document.getElementById('code-grid-container');
+  if (el) el.innerHTML = renderSandboxGrid();
+}
+
+function sandboxQueueOnly() {
+  const el = document.getElementById('cmd-queue');
+  if (el) el.innerHTML = sandboxQueueHtml();
+}
+
+function sandboxTap(r, c) {
+  const s = sandboxState;
+  if (!s || s.running) return;
+  if (r === s.start.r && c === s.start.c) return;
+  Sound.click();
+  const k = r + ',' + c;
+  if (!s.walls.has(k) && !s.stars.has(k)) s.walls.add(k);
+  else if (s.walls.has(k)) { s.walls.delete(k); s.stars.add(k); }
+  else { s.stars.delete(k); }
+  sandboxGridOnly();
+}
+
+function sandboxAdd(dir) {
+  const s = sandboxState;
+  if (!s || s.running || s.commands.length >= 60) return;
+  Sound.click();
+  s.commands.push(dir);
+  sandboxQueueOnly();
+}
+
+function sandboxRepeat(n) {
+  const s = sandboxState;
+  if (!s || s.running) return;
+  const last = s.commands[s.commands.length - 1];
+  if (!last) { showFeedback('👆', 'Tap an arrow first!'); return; }
+  Sound.click();
+  for (let i = 0; i < n && s.commands.length < 60; i++) s.commands.push(last);
+  sandboxQueueOnly();
+}
+
+function sandboxClear() {
+  const s = sandboxState;
+  if (!s || s.running) return;
+  Sound.click();
+  s.commands = [];
+  s.pos = { ...s.start };
+  sandboxGridOnly();
+  sandboxQueueOnly();
+}
+
+function sandboxNew() {
+  const s = sandboxState;
+  if (!s || s.running) return;
+  Sound.click();
+  s.walls = new Set();
+  s.stars = new Set();
+  s.commands = [];
+  s.pos = { ...s.start };
+  sandboxGridOnly();
+  sandboxQueueOnly();
+}
+
+async function sandboxRun() {
+  const s = sandboxState;
+  if (!s || s.running || s.commands.length === 0) return;
+  s.running = true;
+  s.pos = { ...s.start };
+  s.collected = 0;
+  for (let i = 0; i < s.commands.length; i++) {
+    document.querySelectorAll('.queue-item').forEach((qi, j) => qi.classList.toggle('active', j === i));
+    const d = DIRS4[s.commands[i]];
+    const nr = s.pos.r + d.r, nc = s.pos.c + d.c;
+    const k = nr + ',' + nc;
+    if (nr >= 0 && nr < s.size && nc >= 0 && nc < s.size && !s.walls.has(k)) {
+      s.pos = { r: nr, c: nc };
+      if (s.stars.has(k)) { s.stars.delete(k); s.collected++; }
+    }
+    sandboxGridOnly();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  s.running = false;
+  s.commands = [];
+  s.pos = { ...s.start };
+  const n = s.collected;
+  s.collected = 0;
+  sandboxGridOnly();
+  sandboxQueueOnly();
+  recordAnswer(true);
+  showFeedback('⭐', n === 1 ? 'You collected 1 star!' : n > 1 ? `You collected ${n} stars!` : 'Nice driving!');
 }
 
 // ===== INITIALIZATION =====
