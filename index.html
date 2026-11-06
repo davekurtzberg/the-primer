@@ -100,6 +100,8 @@ body {
 .module-card.brooke-reading { background: linear-gradient(135deg, #9c27b0, #ce93d8); color: white; }
 .module-card.brooke-code { background: linear-gradient(135deg, #d32f2f, #ef5350); color: white; }
 .module-card.brooke-explorer { background: linear-gradient(135deg, #00838f, #4dd0e1); color: white; }
+.module-card.seth-time { background: linear-gradient(135deg, #00695c, #26a69a); color: white; }
+.module-card.brooke-time { background: linear-gradient(135deg, #f57f17, #ffb300); color: white; }
 
 /* Activity Screen */
 .activity-screen { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
@@ -148,6 +150,27 @@ body {
 .answer-btn.wrong { background: var(--wrong-red); color: white; border-color: #c62828; animation: shake 0.4s; }
 .answer-btn.disabled { pointer-events: none; opacity: 0.7; }
 .answer-btn.highlight { border-color: var(--star-gold); background: #fff8e1; }
+
+/* Time / Clock */
+.clock-wrap { display: flex; justify-content: center; }
+.clock-wrap svg { width: 280px; height: 280px; max-width: 82vw; touch-action: none; }
+.time-readout { text-align: center; }
+.time-digital { font-size: 2.6em; font-weight: 800; line-height: 1.1; }
+.time-words { font-size: 1.35em; font-weight: 700; color: #555; margin-top: 2px; }
+.time-play-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.time-entry { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 12px 0; flex-wrap: wrap; }
+.time-entry input {
+  width: 76px; height: 64px; font-size: 2em; text-align: center;
+  border: 3px solid #ccc; border-radius: 12px; font-weight: 700; color: #333; background: white;
+}
+.time-entry input.correct { border-color: var(--correct-green); background: #e8f5e9; }
+.time-entry input.wrong { border-color: var(--wrong-red); background: #ffebee; animation: shake 0.4s; }
+.time-colon { font-size: 2em; font-weight: 800; }
+.check-btn {
+  padding: 14px 18px; border-radius: 14px; border: none; background: var(--correct-green);
+  color: white; font-size: 1.2em; font-weight: 700; cursor: pointer; box-shadow: var(--shadow);
+}
+.check-btn:active { transform: scale(0.96); }
 
 /* Spelling area */
 .spelling-area { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; max-width: 500px; }
@@ -469,6 +492,7 @@ function getDefaultProfile(name) {
       math: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false },
       reading: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false, mode: 'quiz' },
       code: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false },
+      time: { level: 1, starsInModule: 0, consecutiveCorrect: 0, consecutiveWrong: 0, totalCorrect: 0, totalAnswered: 0, mastery: false, mode: 'play' },
       explorer: { cardsUnlocked: 3, cardsViewed: [] }
     }
   };
@@ -504,7 +528,7 @@ function getProfile() { return state.profiles[state.currentProfile]; }
 function isSeth() { return state.currentProfile === 'seth'; }
 function getTheme() { return isSeth() ? 'seth' : 'brooke'; }
 function getMaxLevel(module) {
-  const max = { math: isSeth() ? 7 : 5, reading: isSeth() ? 6 : 5, code: isSeth() ? 9 : 5 };
+  const max = { math: isSeth() ? 7 : 5, reading: isSeth() ? 6 : 5, code: isSeth() ? 9 : 5, time: 5 };
   return max[module] || 5;
 }
 
@@ -585,6 +609,7 @@ function renderHome() {
     { key: 'math', icon: '🔢', name: 'Math', cardClass: `${t}-math` },
     { key: 'reading', icon: '📖', name: 'Reading', cardClass: `${t}-reading` },
     { key: 'code', icon: '💻', name: 'Code Lab', cardClass: `${t}-code` },
+    { key: 'time', icon: '🕐', name: 'Time', cardClass: `${t}-time` },
     { key: 'explorer', icon: '🔬', name: 'Explorer', cardClass: `${t}-explorer` }
   ];
 
@@ -1474,16 +1499,18 @@ function renderActivity() {
   if (currentModule === 'math') q = generateMathQuestion();
   else if (currentModule === 'reading') q = generateReadingQuestion();
   else if (currentModule === 'code') q = generateCodeQuestion();
+  else if (currentModule === 'time') q = generateTimeQuestion();
   currentQuestion = q;
   if (q.type === 'draw') initDraw();
   else if (q.type === 'func') initFunc();
   else if (q.type === 'sandbox') initSandbox();
 
-  const modNames = { math: '🔢 Math', reading: '📖 Reading', code: '💻 Code Lab' };
+  const modNames = { math: '🔢 Math', reading: '📖 Reading', code: '💻 Code Lab', time: '🕐 Time' };
   const headerColors = {
     'seth-math': '#1565c0, #42a5f5', 'seth-reading': '#e65100, #ff9800',
-    'seth-code': '#1b5e20, #66bb6a', 'brooke-math': '#e91e63, #f48fb1',
-    'brooke-reading': '#9c27b0, #ce93d8', 'brooke-code': '#d32f2f, #ef5350'
+    'seth-code': '#1b5e20, #66bb6a', 'seth-time': '#00695c, #26a69a',
+    'brooke-math': '#e91e63, #f48fb1', 'brooke-reading': '#9c27b0, #ce93d8',
+    'brooke-code': '#d32f2f, #ef5350', 'brooke-time': '#f57f17, #ffb300'
   };
   const hc = headerColors[`${t}-${currentModule}`] || '#333, #555';
 
@@ -1499,6 +1526,8 @@ function renderActivity() {
   else if (q.type === 'draw') bodyContent = renderDrawQuestion(q);
   else if (q.type === 'func') bodyContent = renderFuncQuestion(q);
   else if (q.type === 'sandbox') bodyContent = renderSandboxQuestion(q);
+  else if (q.type === 'play') bodyContent = renderTimePlay();
+  else if (q.type === 'timeentry') bodyContent = renderTimeEntryQuestion(q);
 
   const bg = isSeth() ? 'var(--seth-bg)' : 'var(--brooke-bg)';
 
@@ -1506,6 +1535,10 @@ function renderActivity() {
     <div class="mode-toggle">
       <button class="mode-btn ${readingMode() === 'quiz' ? 'active' : ''}" onclick="setReadingMode('quiz')">🔤 Quiz</button>
       <button class="mode-btn ${readingMode() === 'readaloud' ? 'active' : ''}" onclick="setReadingMode('readaloud')">🎤 Read Aloud</button>
+    </div>` : currentModule === 'time' ? `
+    <div class="mode-toggle">
+      <button class="mode-btn ${timeMode() === 'play' ? 'active' : ''}" onclick="setTimeMode('play')">🕐 Play</button>
+      <button class="mode-btn ${timeMode() === 'quiz' ? 'active' : ''}" onclick="setTimeMode('quiz')">❓ Quiz</button>
     </div>` : '';
 
   app().innerHTML = `
@@ -1528,6 +1561,7 @@ function renderActivity() {
   if (q.type === 'sequence') initSequence();
   if (q.type === 'sorting') initSorting();
   if (q.type === 'spelling') initSpelling();
+  if (q.type === 'play') initTimePlay();
 }
 
 function renderChoiceQuestion(q) {
@@ -2326,6 +2360,264 @@ async function sandboxRun() {
   sandboxQueueOnly();
   recordAnswer(true);
   showFeedback('⭐', n === 1 ? 'You collected 1 star!' : n > 1 ? `You collected ${n} stars!` : 'Nice driving!');
+}
+
+// ===== TIME MODULE (analog clock) =====
+// Levels: 1 = o'clock (multiple choice), 2 = half past (MC), 3 = quarter past/to (MC),
+// 4 = any 5-minute time (MC, 4 options), 5 = any 5-minute time (type it in).
+const TIME_MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+const HOUR_WORDS = ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'];
+
+function timeMode() {
+  const m = getProfile().modules.time;
+  return (m && m.mode) || 'play';
+}
+
+function setTimeMode(m) {
+  Sound.click();
+  Voice.stop();
+  getProfile().modules.time.mode = m;
+  saveState();
+  renderActivity();
+}
+
+function fmtDigital(h, m) {
+  return h + ':' + String(m).padStart(2, '0');
+}
+
+function hourAngle(h, m) { return ((h % 12) * 30) + (m * 0.5); }
+function minuteAngle(m) { return m * 6; }
+
+function timeWords(h, m) {
+  const next = (h % 12) + 1;
+  if (m === 0) return HOUR_WORDS[h % 12] + " o'clock";
+  if (m === 15) return 'quarter past ' + HOUR_WORDS[h % 12];
+  if (m === 30) return 'half past ' + HOUR_WORDS[h % 12];
+  if (m === 45) return 'quarter to ' + HOUR_WORDS[next % 12];
+  if (m < 30) return m + ' past ' + HOUR_WORDS[h % 12];
+  return (60 - m) + ' to ' + HOUR_WORDS[next % 12];
+}
+
+// Shared play-clock position (persists across re-renders within a session)
+let timePlay = { hour: 3, minute: 0 };
+let timeDrag = null;
+
+function clockSVG(h, m, opts) {
+  opts = opts || {};
+  const size = opts.size || 280;
+  const play = !!opts.play;
+  const hourColor = isSeth() ? '#1a237e' : '#880e4f';
+  const minColor = isSeth() ? '#ff6d00' : '#e91e63';
+  let ticks = '';
+  for (let i = 0; i < 60; i++) {
+    const a = (i * 6) * Math.PI / 180;
+    const isHour = i % 5 === 0;
+    const r1 = isHour ? 82 : 86, r2 = 90;
+    const x1 = 100 + r1 * Math.sin(a), y1 = 100 - r1 * Math.cos(a);
+    const x2 = 100 + r2 * Math.sin(a), y2 = 100 - r2 * Math.cos(a);
+    ticks += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${isHour ? '#333' : '#bbb'}" stroke-width="${isHour ? 3 : 1.5}" stroke-linecap="round"/>`;
+  }
+  let nums = '';
+  for (let n = 1; n <= 12; n++) {
+    const a = (n % 12) * 30 * Math.PI / 180;
+    const x = 100 + 68 * Math.sin(a), y = 100 - 68 * Math.cos(a) + 6;
+    nums += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-size="17" font-weight="700" fill="#333">${n}</text>`;
+  }
+  const pointer = play ? ` id="time-play-clock" onpointerdown="timePlayPointerDown(event)"` : '';
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}"${pointer} style="touch-action:none;user-select:none;-webkit-user-select:none;">
+    <circle cx="100" cy="100" r="94" fill="white" stroke="#333" stroke-width="4"/>
+    ${ticks}${nums}
+    <g id="time-hour-hand" transform="rotate(${hourAngle(h, m)} 100 100)">
+      <line x1="100" y1="100" x2="100" y2="54" stroke="${hourColor}" stroke-width="8" stroke-linecap="round"/>
+      ${play ? '<circle id="time-hour-grab" cx="100" cy="54" r="16" fill="rgba(0,0,0,0)" style="cursor:grab;pointer-events:all;"/>' : ''}
+    </g>
+    <g id="time-minute-hand" transform="rotate(${minuteAngle(m)} 100 100)">
+      <line x1="100" y1="100" x2="100" y2="32" stroke="${minColor}" stroke-width="5" stroke-linecap="round"/>
+      ${play ? '<circle id="time-minute-grab" cx="100" cy="32" r="16" fill="rgba(0,0,0,0)" style="cursor:grab;pointer-events:all;"/>' : ''}
+    </g>
+    <circle cx="100" cy="100" r="6" fill="#333"/>
+  </svg>`;
+}
+
+function renderTimePlay() {
+  const t = timePlay;
+  return `
+    <div class="question-area" style="max-width:420px;">
+      <div class="question-text">Move the hands!</div>
+      <div class="question-sub">Drag the hands around the clock. Short hand = hour, long hand = minutes.</div>
+      <div class="clock-wrap">${clockSVG(t.hour, t.minute, { play: true })}</div>
+      <div class="time-readout">
+        <div class="time-digital" id="time-play-digital">${fmtDigital(t.hour, t.minute)}</div>
+        <div class="time-words" id="time-play-words">It's ${timeWords(t.hour, t.minute)}.</div>
+      </div>
+      <div class="time-play-actions">
+        <button class="hear-btn" onclick="speakTimePlay()">🔊 Hear it</button>
+        <button class="hear-btn" onclick="randomTimePlay()">🎲 Surprise me</button>
+        <button class="hear-btn" onclick="nowTimePlay()">🕐 Right now</button>
+      </div>
+    </div>`;
+}
+
+function updateTimePlay() {
+  const t = timePlay;
+  const hh = $('time-hour-hand'), mh = $('time-minute-hand');
+  if (hh) hh.setAttribute('transform', `rotate(${hourAngle(t.hour, t.minute)} 100 100)`);
+  if (mh) mh.setAttribute('transform', `rotate(${minuteAngle(t.minute)} 100 100)`);
+  const d = $('time-play-digital'), w = $('time-play-words');
+  if (d) d.textContent = fmtDigital(t.hour, t.minute);
+  if (w) w.textContent = "It's " + timeWords(t.hour, t.minute) + '.';
+}
+
+function speakTimePlay() {
+  Sound.click();
+  Voice.speak("It's " + timeWords(timePlay.hour, timePlay.minute) + '.');
+}
+
+function randomTimePlay() {
+  Sound.click();
+  timePlay = { hour: randInt(1, 12), minute: pickOne(TIME_MINUTES) };
+  updateTimePlay();
+  Voice.speak("It's " + timeWords(timePlay.hour, timePlay.minute) + '.');
+}
+
+function nowTimePlay() {
+  Sound.click();
+  const now = new Date();
+  let h = now.getHours() % 12; if (h === 0) h = 12;
+  let m = Math.round(now.getMinutes() / 5) * 5;
+  if (m === 60) { m = 0; h = h % 12 + 1; }
+  timePlay = { hour: h, minute: m };
+  updateTimePlay();
+  Voice.speak("It's " + timeWords(timePlay.hour, timePlay.minute) + '.');
+}
+
+function timePlayAngleFromEvent(e) {
+  const svg = $('time-play-clock');
+  if (!svg) return 0;
+  const rect = svg.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * 200 / rect.width - 100;
+  const y = (e.clientY - rect.top) * 200 / rect.height - 100;
+  let deg = Math.atan2(x, -y) * 180 / Math.PI;
+  if (deg < 0) deg += 360;
+  return deg;
+}
+
+function angDiff(a, b) {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+function timePlayPointerDown(e) {
+  const ang = timePlayAngleFromEvent(e);
+  let which;
+  if (e.target && e.target.id === 'time-hour-grab') which = 'hour';
+  else if (e.target && e.target.id === 'time-minute-grab') which = 'minute';
+  else {
+    const ha = hourAngle(timePlay.hour, timePlay.minute);
+    const ma = minuteAngle(timePlay.minute);
+    which = angDiff(ang, ha) <= angDiff(ang, ma) ? 'hour' : 'minute';
+  }
+  timeDrag = which;
+  const svg = $('time-play-clock');
+  if (svg) { try { svg.setPointerCapture(e.pointerId); } catch (err) {} }
+  timePlayApplyAngle(ang);
+  e.preventDefault();
+}
+
+function timePlayApplyAngle(ang) {
+  if (timeDrag === 'minute') {
+    timePlay.minute = (Math.round(ang / 30) * 5) % 60;
+  } else if (timeDrag === 'hour') {
+    let h = Math.round(ang / 30) % 12;
+    if (h === 0) h = 12;
+    timePlay.hour = h;
+  }
+  updateTimePlay();
+}
+
+function initTimePlay() {
+  const svg = $('time-play-clock');
+  if (!svg) return;
+  svg.addEventListener('pointermove', (e) => {
+    if (!timeDrag) return;
+    timePlayApplyAngle(timePlayAngleFromEvent(e));
+    e.preventDefault();
+  });
+  const endDrag = () => {
+    if (timeDrag) {
+      timeDrag = null;
+      Voice.speak("It's " + timeWords(timePlay.hour, timePlay.minute) + '.');
+    }
+  };
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', () => { timeDrag = null; });
+}
+
+function generateTimeQuestion() {
+  if (timeMode() === 'play') return { type: 'play' };
+  const level = getProfile().modules.time.level;
+  let hour, minute;
+  if (level === 1) { hour = randInt(1, 12); minute = 0; }
+  else if (level === 2) { hour = randInt(1, 12); minute = 30; }
+  else if (level === 3) { hour = randInt(1, 12); minute = pickOne([15, 45]); }
+  else { hour = randInt(1, 12); minute = pickOne(TIME_MINUTES); }
+  const visual = clockSVG(hour, minute, { size: 240 });
+  if (level >= 5) {
+    return { type: 'timeentry', hour, minute, question: 'What time is it?', visual };
+  }
+  const target = fmtDigital(hour, minute);
+  const opts = new Set([target]);
+  let guard = 0;
+  while (opts.size < (level === 4 ? 4 : 3) && guard++ < 40) {
+    let h = hour, m = minute;
+    if (Math.random() < 0.5) {
+      h = ((hour - 1 + randInt(-2, 2) + 12) % 12) + 1;
+    } else {
+      m = (minute + pickOne([-30, -15, 15, 30]) + 60) % 60;
+    }
+    opts.add(fmtDigital(h, m));
+  }
+  const options = shuffle([...opts]);
+  return { type: 'choice', question: 'What time is it?', visual, options, answer: target, cols: options.length };
+}
+
+function renderTimeEntryQuestion(q) {
+  return `
+    <div class="question-area" style="max-width:420px;">
+      <div class="question-text">${q.question}</div>
+      <div class="visual-area">${q.visual}</div>
+      <div class="time-entry">
+        <input id="time-hour-input" type="number" inputmode="numeric" min="1" max="12" placeholder="?" aria-label="Hour">
+        <span class="time-colon">:</span>
+        <input id="time-minute-input" type="number" inputmode="numeric" min="0" max="59" placeholder="??" aria-label="Minutes">
+        <button class="check-btn" onclick="handleTimeEntry()">Check ✅</button>
+      </div>
+      <div class="question-sub">Type the hour and the minutes. Remember: short hand = hour, long hand = minutes.</div>
+    </div>`;
+}
+
+function handleTimeEntry() {
+  if (answered) return;
+  const q = currentQuestion;
+  const hEl = $('time-hour-input'), mEl = $('time-minute-input');
+  const h = hEl ? parseInt(hEl.value, 10) : NaN;
+  const m = mEl ? parseInt(mEl.value, 10) : NaN;
+  if (isNaN(h) || isNaN(m) || h < 1 || h > 12 || m < 0 || m > 59) {
+    showFeedback('', 'Type a time first!');
+    return;
+  }
+  answered = true;
+  const correct = (h === q.hour && m === q.minute);
+  if (hEl) hEl.classList.add(correct ? 'correct' : 'wrong');
+  if (mEl) mEl.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct && hEl && mEl) {
+    hEl.value = q.hour;
+    mEl.value = String(q.minute).padStart(2, '0');
+    hEl.classList.remove('wrong'); mEl.classList.remove('wrong');
+    hEl.classList.add('correct'); mEl.classList.add('correct');
+  }
+  recordAnswer(correct);
+  setTimeout(() => renderActivity(), correct ? 1200 : 2400);
 }
 
 // ===== INITIALIZATION =====
