@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Seth's Pokémon Cards 🃏</title>
+<style>
+:root {
+  --seth-primary: #1a237e;
+  --seth-secondary: #ff6d00;
+  --seth-bg: #e8eaf6;
+  --seth-accent: #4fc3f7;
+  --brooke-primary: #880e4f;
+  --brooke-secondary: #e91e63;
+  --correct-green: #4caf50;
+  --wrong-red: #f44336;
+  --star-gold: #ffd700;
+  --radius: 16px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh; min-height: 100dvh;
+  background: #f5f5f5;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+#app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #ffcb05 0%, #ff6d00 55%, #1a237e 100%);
+  color: white; padding: 18px 16px 14px; text-align: center;
+  position: sticky; top: 0; z-index: 20; box-shadow: var(--shadow);
+}
+.header h1 { font-size: 1.7em; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.header .sub { font-size: .95em; opacity: .95; margin-top: 2px; }
+.total-box {
+  background: rgba(255,255,255,.22); border-radius: var(--radius);
+  margin: 12px auto 0; padding: 10px 14px; max-width: 420px;
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+}
+.total-box .big { font-size: 2em; font-weight: 800; line-height: 1; }
+.total-box .lbl { font-size: .8em; opacity: .9; }
+.total-box .counts { font-size: 1.05em; font-weight: 700; }
+.icon-btn {
+  background: rgba(255,255,255,.25); border: 2px solid rgba(255,255,255,.6);
+  color: white; border-radius: 999px; padding: 6px 12px; font-size: 1em;
+  cursor: pointer; font-family: inherit; font-weight: 700;
+}
+.icon-btn:active { transform: scale(.95); }
+
+/* Tabs */
+.tabs { display: flex; gap: 8px; padding: 12px 12px 0; }
+.tab {
+  flex: 1; padding: 12px 4px; border: none; border-radius: var(--radius) var(--radius) 0 0;
+  background: #e0e0e0; font-size: 1.05em; font-weight: 700; cursor: pointer;
+  font-family: inherit; color: #555;
+}
+.tab.active { background: white; color: var(--seth-primary); box-shadow: var(--shadow); }
+.tab .badge {
+  background: var(--seth-secondary); color: white; border-radius: 999px;
+  font-size: .75em; padding: 1px 7px; margin-left: 2px; vertical-align: middle;
+}
+
+/* Views */
+.view { display: none; background: white; padding: 16px 12px 40px; flex: 1; }
+.view.active { display: block; }
+.view h2 { color: var(--seth-primary); margin-bottom: 10px; font-size: 1.3em; }
+.hint { color: #666; font-size: .95em; margin-bottom: 12px; }
+
+/* Search */
+.search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.search-row input {
+  flex: 1; font-size: 1.2em; padding: 12px 14px; border-radius: var(--radius);
+  border: 2px solid #ccc; font-family: inherit; min-width: 0;
+}
+.search-row input:focus { outline: none; border-color: var(--seth-secondary); }
+.search-row button {
+  background: var(--seth-secondary); color: white; border: none; border-radius: var(--radius);
+  font-size: 1.2em; font-weight: 800; padding: 0 18px; cursor: pointer; font-family: inherit;
+}
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip {
+  background: var(--seth-bg); color: var(--seth-primary); border: 2px solid var(--seth-accent);
+  border-radius: 999px; padding: 7px 14px; font-size: 1em; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.chip:active { transform: scale(.95); }
+
+/* Card grids */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.card-tile {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: hidden; cursor: pointer; border: 3px solid transparent; text-align: center;
+  padding-bottom: 8px; position: relative;
+}
+.card-tile.owned { border-color: var(--correct-green); }
+.card-tile img { width: 100%; display: block; background: #eceff1; min-height: 140px; }
+.card-tile .nm { font-weight: 700; font-size: .9em; padding: 6px 6px 0; line-height: 1.2; }
+.card-tile .st { font-size: .8em; color: #777; padding: 0 6px; }
+.card-tile .pr { font-size: .9em; font-weight: 800; color: var(--correct-green); padding-top: 2px; }
+.card-tile .own-badge {
+  position: absolute; top: 6px; right: 6px; background: var(--correct-green); color: white;
+  border-radius: 999px; font-size: .8em; font-weight: 800; padding: 3px 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.card-tile .qty-badge {
+  position: absolute; top: 6px; left: 6px; background: var(--seth-primary); color: white;
+  border-radius: 999px; font-size: .8em; font-weight: 800; padding: 3px 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.img-ph {
+  width: 100%; aspect-ratio: 63/88; background: linear-gradient(135deg, #e8eaf6, #fce4ec);
+  display: flex; align-items: center; justify-content: center; font-size: 2.4em; color: #999;
+}
+.qty-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
+.qty-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none; font-size: 1.2em; font-weight: 800;
+  background: var(--seth-primary); color: white; cursor: pointer; font-family: inherit;
+}
+.qty-btn.minus { background: #9e9e9e; }
+.qty-num { font-weight: 800; font-size: 1.1em; min-width: 26px; }
+.remove-btn {
+  background: none; border: none; color: var(--wrong-red); font-size: .9em; font-weight: 700;
+  cursor: pointer; margin-top: 4px; font-family: inherit; text-decoration: underline;
+}
+.variant-tag {
+  display: inline-block; font-size: .75em; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  background: #fff3e0; color: #e65100; margin-top: 4px;
+}
+.variant-tag.holo { background: #e3f2fd; color: #0d47a1; }
+.variant-tag.reverse { background: #f3e5f5; color: #6a1b9a; }
+
+/* Top 5 */
+.top5 { background: #fffde7; border: 2px solid var(--star-gold); border-radius: var(--radius); padding: 12px; margin-bottom: 16px; }
+.top5 h3 { color: #f57f17; margin-bottom: 8px; }
+.top5 ol { margin-left: 22px; font-size: 1em; }
+.top5 li { margin-bottom: 4px; }
+.top5 .v { font-weight: 800; color: var(--correct-green); }
+
+/* Progress */
+.progress-wrap { background: #fffde7; border: 2px solid var(--star-gold); border-radius: var(--radius); padding: 12px; margin-bottom: 14px; }
+.progress-bar { background: #e0e0e0; border-radius: 999px; height: 22px; overflow: hidden; margin: 8px 0 4px; }
+.progress-fill { background: linear-gradient(90deg, var(--star-gold), var(--seth-secondary)); height: 100%; border-radius: 999px; transition: width .4s; }
+.stars { font-size: 1.6em; letter-spacing: 2px; }
+
+/* Set picker */
+.set-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius);
+  background: #f5f5f5; margin-bottom: 8px; cursor: pointer; border: 2px solid transparent;
+}
+.set-row.selected { border-color: var(--seth-secondary); background: #fff3e0; }
+.set-row img { width: 52px; height: auto; max-height: 40px; object-fit: contain; }
+.set-row .nm { font-weight: 700; flex: 1; }
+.set-row .ct { font-size: .85em; color: #777; }
+
+/* Buttons */
+.big-btn {
+  display: block; width: 100%; padding: 14px; border: none; border-radius: var(--radius);
+  background: var(--seth-secondary); color: white; font-size: 1.2em; font-weight: 800;
+  cursor: pointer; font-family: inherit; margin-top: 10px; box-shadow: var(--shadow);
+}
+.big-btn.green { background: var(--correct-green); }
+.big-btn.blue { background: var(--seth-primary); }
+.big-btn.ghost { background: #eceff1; color: #444; box-shadow: none; }
+.big-btn:active { transform: scale(.98); }
+.row2 { display: flex; gap: 10px; }
+.row2 .big-btn { flex: 1; }
+
+/* Modal */
+.modal-back {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
+  align-items: flex-end; justify-content: center;
+}
+.modal-back.open { display: flex; }
+.modal {
+  background: white; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
+  border-radius: 24px 24px 0 0; padding: 18px 18px 30px; text-align: center;
+}
+.modal img.big { width: min(78vw, 300px); border-radius: 12px; box-shadow: var(--shadow); }
+.modal h2 { margin: 10px 0 2px; color: var(--seth-primary); }
+.modal .meta { color: #666; margin-bottom: 10px; }
+.variant-pick { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+.variant-pick button {
+  border: 2px solid #ccc; background: white; border-radius: 999px; padding: 8px 14px;
+  font-size: 1em; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.variant-pick button.sel { border-color: var(--seth-secondary); background: #fff3e0; }
+.variant-pick button:disabled { opacity: .4; cursor: default; }
+.price-line { font-size: 1.3em; font-weight: 800; color: var(--correct-green); margin: 6px 0; }
+.modal .close-x {
+  float: right; background: #eceff1; border: none; border-radius: 50%; width: 36px; height: 36px;
+  font-size: 1.2em; cursor: pointer; font-family: inherit;
+}
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(80px);
+  background: #333; color: white; padding: 12px 20px; border-radius: 999px; font-weight: 700;
+  z-index: 100; opacity: 0; transition: all .3s; pointer-events: none; max-width: 92vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.empty { text-align: center; color: #888; padding: 30px 10px; font-size: 1.05em; }
+.footer-note { color: #999; font-size: .85em; margin-top: 24px; text-align: center; line-height: 1.5; }
+.footer-note a { color: var(--seth-primary); }
+.loading { text-align: center; color: #777; padding: 20px; font-size: 1.1em; }
+.section-title { margin: 18px 0 8px; color: var(--seth-primary); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>🃏 Seth's Pokémon Cards</h1>
+    <div class="sub">Find cards · Grow your collection · Finish sets!</div>
+    <div class="total-box">
+      <div><div class="big" id="totalValue">$0.00</div><div class="lbl">collection value</div></div>
+      <div><div class="counts" id="totalCount">0 cards</div><div class="lbl" id="uniqueCount">0 different</div></div>
+      <button class="icon-btn" id="speakBtn" title="Hear my total">🔊 Say it</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="find">🔍 Find</button>
+    <button class="tab" data-view="mine">🗂️ My Cards <span class="badge" id="mineBadge">0</span></button>
+    <button class="tab" data-view="sets">✅ Sets</button>
+    <button class="tab" data-view="wish">⭐ Wishlist <span class="badge" id="wishBadge">0</span></button>
+  </div>
+
+  <!-- FIND -->
+  <div class="view active" id="view-find">
+    <h2>🔍 Find a card</h2>
+    <p class="hint">Type a Pokémon's name, then tap a card to add it. Prices are estimates — tap a card to see them.</p>
+    <div class="search-row">
+      <input id="searchInput" type="search" placeholder="Pikachu, Charizard, Eevee…" autocomplete="off">
+      <button id="searchBtn">Go!</button>
+    </div>
+    <div class="chips" id="quickChips"></div>
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- MY CARDS -->
+  <div class="view" id="view-mine">
+    <h2>🗂️ My Cards</h2>
+    <div class="top5" id="top5Box" style="display:none">
+      <h3>🏆 My most valuable cards</h3>
+      <ol id="top5List"></ol>
+    </div>
+    <p class="hint">Tap + or − to change how many you have. Prices update when you tap 🔄 below.</p>
+    <div class="grid" id="myGrid"></div>
+    <div class="empty" id="myEmpty">No cards yet! Go to 🔍 Find and add your first card. ⭐</div>
+    <button class="big-btn blue" id="refreshPricesBtn">🔄 Refresh prices</button>
+    <div class="row2">
+      <button class="big-btn ghost" id="exportBtn">💾 Save backup</button>
+      <button class="big-btn ghost" id="importBtn">📂 Load backup</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+  </div>
+
+  <!-- SETS -->
+  <div class="view" id="view-sets">
+    <h2>✅ Set checklists</h2>
+    <p class="hint">Pick a set to see which cards you own — and which ones you're still missing!</p>
+    <div class="search-row">
+      <input id="setSearchInput" type="search" placeholder="Search sets… (try 151, Crown Zenith…)" autocomplete="off">
+    </div>
+    <div id="setList"></div>
+    <div id="checklistBox" style="display:none">
+      <div class="progress-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong id="checklistTitle"></strong><span id="checklistPct"></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="checklistFill" style="width:0%"></div></div>
+        <div class="stars" id="checklistStars"></div>
+        <div id="checklistCount" style="color:#666"></div>
+      </div>
+      <div class="grid" id="checklistGrid"></div>
+    </div>
+  </div>
+
+  <!-- WISHLIST -->
+  <div class="view" id="view-wish">
+    <h2>⭐ Wishlist</h2>
+    <p class="hint">Cards you want! Tap "Got it!" when one joins your collection.</p>
+    <div class="grid" id="wishGrid"></div>
+    <div class="empty" id="wishEmpty">Nothing on your wishlist yet. Find a card and tap ⭐ Want it!</div>
+  </div>
+
+  <p class="footer-note">
+    Prices are TCGplayer market estimates (Near Mint assumed) — not what you'd get selling them.<br>
+    Your collection is saved on this device only. Use 💾 Save backup so you never lose it!<br>
+    v1: no camera scanning yet — search and tap to add. · <a href="https://davekurtzberg.github.io/the-primer/">← Back to the Primer</a>
+  </p>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modalBody"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const API = 'https://api.tcgdex.net/v2/en';
+const LS_KEY = 'pokemon-cards-v1';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+let state = { collection: {}, wishlist: {} }; // collection key: id__variant ; wishlist key: id
+let setsCache = null;
+let currentSetId = null;
+let currentSetCards = [];
+let modalCard = null;      // detail object for open modal
+let modalVariant = 'holofoil';
+let modalQty = 1;
+let modalFrom = 'find';    // 'find' | 'wish' | 'checklist'
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) { const p = JSON.parse(raw); if (p && typeof p === 'object') state = { collection: p.collection || {}, wishlist: p.wishlist || {} }; }
+  } catch (e) { /* fresh start */ }
+}
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { }
+}
+function money(n) { return '$' + (Number(n) || 0).toFixed(2); }
+function imgLow(url) { return url ? url + '/low.webp' : ''; }
+function imgHigh(url) { return url ? url + '/high.webp' : ''; }
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function speak(text) {
+  try { const u = new SpeechSynthesisUtterance(text); u.rate = 0.95; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { }
+}
+
+// ---------- pricing ----------
+function priceFor(detail, variant) {
+  const tp = (detail && detail.pricing && detail.pricing.tcgplayer) || null;
+  if (!tp) return null;
+  const order = [variant, 'holofoil', 'normal', 'reverseHolofoil'];
+  for (const v of order) {
+    if (tp[v] && typeof tp[v].marketPrice === 'number') return { variant: v, price: tp[v].marketPrice };
+  }
+  return null;
+}
+function variantLabel(v) {
+  return v === 'holofoil' ? '✨ Holo' : v === 'reverseHolofoil' ? '🔄 Reverse Holo' : 'Normal';
+}
+
+// ---------- header stats ----------
+function totals() {
+  let value = 0, count = 0, unique = 0;
+  const lines = [];
+  for (const k of Object.keys(state.collection)) {
+    const c = state.collection[k];
+    const line = (c.price || 0) * (c.qty || 0);
+    value += line; count += (c.qty || 0); unique += 1;
+    lines.push({ ...c, key: k, line });
+  }
+  lines.sort((a, b) => b.line - a.line);
+  return { value, count, unique, top5: lines.slice(0, 5) };
+}
+function renderHeader() {
+  const t = totals();
+  $('#totalValue').textContent = money(t.value);
+  $('#totalCount').textContent = t.count + (t.count === 1 ? ' card' : ' cards');
+  $('#uniqueCount').textContent = t.unique + ' different';
+  $('#mineBadge').textContent = t.unique;
+  $('#wishBadge').textContent = Object.keys(state.wishlist).length;
+  const box = $('#top5Box');
+  if (t.top5.length) {
+    box.style.display = '';
+    $('#top5List').innerHTML = t.top5.map(c =>
+      '<li>' + escapeHtml(c.name) + ' (' + escapeHtml(c.setName || '') + ') ×' + c.qty +
+      ' — <span class="v">' + money(c.line) + '</span></li>').join('');
+  } else box.style.display = 'none';
+}
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ---------- tabs ----------
+$$('.tab').forEach(b => b.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $('#view-' + b.dataset.view).classList.add('active');
+  if (b.dataset.view === 'mine') renderMine();
+  if (b.dataset.view === 'sets') renderSetPicker();
+  if (b.dataset.view === 'wish') renderWish();
+}));
+function showView(name) {
+  $$('.tab').forEach(x => x.classList.toggle('active', x.dataset.view === name));
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+}
+
+// ---------- search ----------
+const QUICK = ['Pikachu', 'Charizard', 'Eevee', 'Mewtwo', 'Gengar', 'Snorlax', 'Bulbasaur', 'Squirtle'];
+$('#quickChips').innerHTML = QUICK.map(q => '<button class="chip" data-q="' + q + '">' + q + '</button>').join('');
+$$('#quickChips .chip').forEach(c => c.addEventListener('click', () => { $('#searchInput').value = c.dataset.q; doSearch(); }));
+let searchTimer = null;
+$('#searchInput').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(doSearch, 450); });
+$('#searchBtn').addEventListener('click', doSearch);
+$('#searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function doSearch() {
+  const q = $('#searchInput').value.trim();
+  const box = $('#searchResults');
+  if (q.length < 2) { box.innerHTML = '<p class="hint">Type at least 2 letters to search.</p>'; return; }
+  box.innerHTML = '<div class="loading">🔍 Looking for ' + escapeHtml(q) + '…</div>';
+  try {
+    const r = await fetch(API + '/cards?name=' + encodeURIComponent(q));
+    if (!r.ok) throw new Error('search failed');
+    const list = await r.json();
+    if (!Array.isArray(list) || !list.length) {
+      box.innerHTML = '<div class="empty">No cards found for "' + escapeHtml(q) + '" — try another name!</div>';
+      return;
+    }
+    await ensureSetNames();
+    const shown = list.slice(0, 24);
+    box.innerHTML = '<p class="hint">Found ' + list.length + ' card' + (list.length === 1 ? '' : 's') +
+      (list.length > 24 ? ' — showing the first 24' : '') + '. Tap one to see it big!</p>' +
+      '<div class="grid">' + shown.map(c => cardTileHtml(c, 'find')).join('') + '</div>';
+    box.querySelectorAll('.card-tile').forEach(t => t.addEventListener('click', () => openCard(t.dataset.id, 'find')));
+  } catch (e) {
+    box.innerHTML = '<div class="empty">Can\'t reach the card list right now — check wifi and try again. 📶</div>';
+  }
+}
+function cardTileHtml(c, ctx) {
+  const img = c.image ? '<img src="' + imgLow(c.image) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;img-ph&quot;>🃏</div>\'">' : '<div class="img-ph">🃏</div>';
+  const setName = c.set ? (c.set.name || '') : lookupSetName(c.id);
+  return '<div class="card-tile" data-id="' + escapeHtml(c.id) + '">' + img +
+    '<div class="nm">' + escapeHtml(c.name) + '</div>' +
+    '<div class="st">' + escapeHtml(setName) + ' · #' + escapeHtml(c.localId || '') + '</div></div>';
+}
+// Search summaries don't include the set name, so derive it from the card id
+// (e.g. sv03.5-006 -> set sv03.5) using the /sets list.
+let setNameMap = null;
+function cardSetId(id) { const i = String(id).lastIndexOf('-'); return i > 0 ? String(id).slice(0, i) : String(id); }
+function lookupSetName(id) { return (setNameMap && setNameMap[cardSetId(id)]) || ''; }
+async function ensureSetNames() {
+  if (setNameMap) return;
+  try {
+    const sets = await getSets();
+    setNameMap = {};
+    for (const s of sets) setNameMap[s.id] = s.name;
+  } catch (e) { /* set names stay blank */ }
+}
+
+// ---------- detail modal ----------
+async function openCard(id, from) {
+  modalFrom = from; modalQty = 1;
+  const back = $('#modalBack'), body = $('#modalBody');
+  body.innerHTML = '<div class="loading">Loading card… 🃏</div>';
+  back.classList.add('open');
+  try {
+    const r = await fetch(API + '/cards/' + encodeURIComponent(id));
+    if (!r.ok) throw new Error('card failed');
+    modalCard = await r.json();
+    const tp = modalCard.pricing && modalCard.pricing.tcgplayer;
+    // default variant: holofoil if priced, else normal
+    modalVariant = (tp && tp.holofoil) ? 'holofoil' : (tp && tp.normal) ? 'normal' : 'holofoil';
+    renderModal();
+  } catch (e) {
+    body.innerHTML = '<button class="close-x" onclick="closeModal()">✕</button><div class="empty">Couldn\'t load that card — check wifi and try again.</div>';
+  }
+}
+function renderModal() {
+  const c = modalCard;
+  const tp = (c.pricing && c.pricing.tcgplayer) || {};
+  const variants = ['normal', 'holofoil', 'reverseHolofoil'];
+  const picked = priceFor(c, modalVariant);
+  const img = c.image ? '<img class="big" src="' + imgHigh(c.image) + '" alt="' + escapeHtml(c.name) + '" onerror="this.onerror=null;this.src=\'' + imgLow(c.image) + '\';">' : '<div class="img-ph" style="font-size:4em">🃏</div>';
+  $('#modalBody').innerHTML =
+    '<button class="close-x" onclick="closeModal()">✕</button>' + img +
+    '<h2>' + escapeHtml(c.name) + '</h2>' +
+    '<div class="meta">' + escapeHtml(c.set ? c.set.name : '') + ' · #' + escapeHtml(c.localId || '') +
+    (c.rarity ? ' · ' + escapeHtml(c.rarity) : '') + '</div>' +
+    '<div class="variant-pick">' + variants.map(v => {
+      const p = tp[v];
+      const dis = (!p || typeof p.marketPrice !== 'number') ? ' disabled' : '';
+      const sel = (modalVariant === v) ? ' class="sel"' : '';
+      return '<button data-v="' + v + '"' + sel + dis + '>' + variantLabel(v) +
+        (p && typeof p.marketPrice === 'number' ? ' · ' + money(p.marketPrice) : ' · —') + '</button>';
+    }).join('') + '</div>' +
+    '<div class="price-line">' + (picked ? money(picked.price) + ' each · ' + variantLabel(picked.variant) : 'No price listed') + '</div>' +
+    '<div class="qty-row"><button class="qty-btn minus" id="mQtyMinus">−</button><span class="qty-num" id="mQty">1</span><button class="qty-btn" id="mQtyPlus">+</button></div>' +
+    '<button class="big-btn green" id="mAdd">➕ Add to My Cards</button>' +
+    '<button class="big-btn blue" id="mWish">⭐ Want it! (Wishlist)</button>' +
+    '<button class="big-btn ghost" onclick="closeModal()">Not this one</button>';
+  $$('#modalBody .variant-pick button').forEach(b => b.addEventListener('click', () => {
+    if (b.disabled) return;
+    modalVariant = b.dataset.v; renderModal();
+  }));
+  $('#mQtyMinus').addEventListener('click', () => { if (modalQty > 1) { modalQty--; $('#mQty').textContent = modalQty; } });
+  $('#mQtyPlus').addEventListener('click', () => { if (modalQty < 99) { modalQty++; $('#mQty').textContent = modalQty; } });
+  $('#mAdd').addEventListener('click', addModalToCollection);
+  $('#mWish').addEventListener('click', addModalToWishlist);
+}
+function closeModal() { $('#modalBack').classList.remove('open'); modalCard = null; }
+$('#modalBack').addEventListener('click', e => { if (e.target.id === 'modalBack') closeModal(); });
+
+function addModalToCollection() {
+  const c = modalCard; if (!c) return;
+  const picked = priceFor(c, modalVariant);
+  const key = c.id + '__' + (picked ? picked.variant : modalVariant);
+  const setName = c.set ? c.set.name : '';
+  if (state.collection[key]) {
+    state.collection[key].qty += modalQty;
+    if (picked) state.collection[key].price = picked.price;
+  } else {
+    state.collection[key] = {
+      id: c.id, variant: picked ? picked.variant : modalVariant, name: c.name,
+      setName: setName, setId: c.set ? c.set.id : '', localId: c.localId || '',
+      image: c.image || '', qty: modalQty, price: picked ? picked.price : 0
+    };
+  }
+  delete state.wishlist[c.id];
+  saveState(); renderHeader();
+  toast('Added ' + c.name + ' ×' + modalQty + '! ⭐');
+  speak(c.name + ' added to your cards!');
+  closeModal();
+  if (currentSetId) renderChecklist();
+}
+function addModalToWishlist() {
+  const c = modalCard; if (!c) return;
+  if (!state.wishlist[c.id]) {
+    state.wishlist[c.id] = {
+      id: c.id, name: c.name, setName: c.set ? c.set.name : '', localId: c.localId || '',
+      image: c.image || ''
+    };
+    saveState(); renderHeader();
+    toast(c.name + ' is on your wishlist! ⭐');
+  } else toast(c.name + ' is already on your wishlist!');
+  closeModal();
+}
+
+// ---------- My Cards ----------
+function renderMine() {
+  const grid = $('#myGrid');
+  const keys = Object.keys(state.collection);
+  $('#myEmpty').style.display = keys.length ? 'none' : '';
+  grid.innerHTML = keys.map(k => {
+    const c = state.collection[k];
+    const img = c.image ? '<img src="' + imgLow(c.image) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;img-ph&quot;>🃏</div>\'">' : '<div class="img-ph">🃏</div>';
+    return '<div class="card-tile owned" data-key="' + escapeHtml(k) + '">' + img +
+      '<span class="qty-badge">×' + c.qty + '</span>' +
+      '<div class="nm">' + escapeHtml(c.name) + '</div>' +
+      '<div class="st">' + escapeHtml(c.setName || '') + ' · #' + escapeHtml(c.localId || '') + '</div>' +
+      '<span class="variant-tag ' + (c.variant === 'holofoil' ? 'holo' : c.variant === 'reverseHolofoil' ? 'reverse' : '') + '">' + variantLabel(c.variant) + '</span>' +
+      '<div class="pr">' + money(c.price * c.qty) + ' <span style="color:#999;font-weight:400">(' + money(c.price) + ' ea)</span></div>' +
+      '<div class="qty-row"><button class="qty-btn minus" data-act="minus">−</button><span class="qty-num">' + c.qty + '</span><button class="qty-btn" data-act="plus">+</button></div>' +
+      '<button class="remove-btn" data-act="remove">Remove</button></div>';
+  }).join('');
+  grid.querySelectorAll('.card-tile').forEach(t => {
+    const key = t.dataset.key;
+    t.querySelector('[data-act="minus"]').addEventListener('click', e => { e.stopPropagation(); bumpQty(key, -1); });
+    t.querySelector('[data-act="plus"]').addEventListener('click', e => { e.stopPropagation(); bumpQty(key, 1); });
+    t.querySelector('[data-act="remove"]').addEventListener('click', e => {
+      e.stopPropagation();
+      const nm = state.collection[key].name;
+      delete state.collection[key]; saveState(); renderHeader(); renderMine();
+      toast('Removed ' + nm);
+    });
+    t.addEventListener('click', () => openCard(state.collection[key].id, 'mine'));
+  });
+}
+function bumpQty(key, d) {
+  const c = state.collection[key]; if (!c) return;
+  c.qty += d;
+  if (c.qty <= 0) delete state.collection[key];
+  saveState(); renderHeader(); renderMine();
+}
+
+// ---------- refresh prices ----------
+$('#refreshPricesBtn').addEventListener('click', async () => {
+  const keys = Object.keys(state.collection);
+  if (!keys.length) { toast('No cards to refresh yet!'); return; }
+  toast('Checking today\'s prices… 🔄');
+  let updated = 0;
+  for (const k of keys) {
+    const c = state.collection[k];
+    try {
+      const r = await fetch(API + '/cards/' + encodeURIComponent(c.id));
+      if (!r.ok) continue;
+      const d = await r.json();
+      const p = priceFor(d, c.variant);
+      if (p) { c.price = p.price; updated++; }
+    } catch (e) { /* keep old price */ }
+  }
+  saveState(); renderHeader(); renderMine();
+  toast(updated ? 'Prices updated! ✅' : 'Couldn\'t reach prices — kept the old ones.');
+});
+
+// ---------- export / import ----------
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'seth-pokemon-cards-backup.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('Backup saved! 💾');
+});
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const p = JSON.parse(rd.result);
+      if (!p || typeof p !== 'object' || !p.collection) throw new Error('bad file');
+      state = { collection: p.collection || {}, wishlist: p.wishlist || {} };
+      saveState(); renderHeader(); renderMine(); renderWish();
+      toast('Backup loaded! ✅');
+    } catch (err) { toast('That file didn\'t look like a card backup.'); }
+  };
+  rd.readAsText(f);
+  e.target.value = '';
+});
+
+// ---------- sets / checklists ----------
+async function getSets() {
+  if (setsCache) return setsCache;
+  const r = await fetch(API + '/sets');
+  if (!r.ok) throw new Error('sets failed');
+  setsCache = await r.json();
+  setsCache.sort((a, b) => {
+    const da = a.releaseDate || '0000', db = b.releaseDate || '0000';
+    return db.localeCompare(da);
+  });
+  return setsCache;
+}
+async function renderSetPicker() {
+  const box = $('#setList');
+  const q = ($('#setSearchInput').value || '').trim().toLowerCase();
+  if (!setsCache) box.innerHTML = '<div class="loading">Loading sets…</div>';
+  try {
+    const sets = await getSets();
+    const filtered = q ? sets.filter(s => (s.name || '').toLowerCase().includes(q)) : sets;
+    const shown = filtered.slice(0, 40);
+    box.innerHTML = (q && filtered.length > 40 ? '<p class="hint">Showing 40 of ' + filtered.length + ' matching sets.</p>' : '') +
+      shown.map(s =>
+        '<div class="set-row' + (currentSetId === s.id ? ' selected' : '') + '" data-id="' + escapeHtml(s.id) + '">' +
+        (s.logo ? '<img src="' + escapeHtml(s.logo) + '" alt="" loading="lazy">' : '<span style="font-size:1.6em">🃏</span>') +
+        '<span class="nm">' + escapeHtml(s.name) + '</span>' +
+        '<span class="ct">' + (s.cardCount ? (s.cardCount.official || s.cardCount.total || '?') + ' cards' : '') + '</span></div>'
+      ).join('') || '<div class="empty">No sets match that search.</div>';
+    box.querySelectorAll('.set-row').forEach(row => row.addEventListener('click', () => selectSet(row.dataset.id)));
+  } catch (e) {
+    box.innerHTML = '<div class="empty">Can\'t load the set list right now — check wifi and try again.</div>';
+  }
+}
+$('#setSearchInput').addEventListener('input', () => { clearTimeout(window._setT); window._setT = setTimeout(renderSetPicker, 350); });
+
+async function selectSet(id) {
+  currentSetId = id;
+  renderSetPicker();
+  const box = $('#checklistBox');
+  box.style.display = '';
+  $('#checklistGrid').innerHTML = '<div class="loading">Loading cards…</div>';
+  try {
+    const r = await fetch(API + '/sets/' + encodeURIComponent(id));
+    if (!r.ok) throw new Error('set failed');
+    const d = await r.json();
+    currentSetCards = d.cards || [];
+    renderChecklist();
+  } catch (e) {
+    $('#checklistGrid').innerHTML = '<div class="empty">Couldn\'t load that set — check wifi and try again.</div>';
+  }
+}
+function ownedBaseIds() {
+  const s = new Set();
+  for (const k of Object.keys(state.collection)) s.add(state.collection[k].id);
+  return s;
+}
+function renderChecklist() {
+  if (!currentSetId || !currentSetCards.length) return;
+  const owned = ownedBaseIds();
+  const total = currentSetCards.length;
+  const have = currentSetCards.filter(c => owned.has(c.id)).length;
+  const pct = total ? Math.round(have / total * 100) : 0;
+  const setName = (setsCache || []).find(s => s.id === currentSetId);
+  $('#checklistTitle').textContent = '📦 ' + (setName ? setName.name : currentSetId);
+  $('#checklistPct').textContent = pct + '%';
+  $('#checklistFill').style.width = pct + '%';
+  const stars = Math.round(pct / 20);
+  $('#checklistStars').textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+  $('#checklistCount').textContent = 'You own ' + have + ' of ' + total + ' cards' + (pct === 100 ? ' — SET COMPLETE! 🎉' : '');
+  const sorted = [...currentSetCards].sort((a, b) => {
+    const ao = owned.has(a.id) ? 0 : 1, bo = owned.has(b.id) ? 0 : 1;
+    return ao - bo || String(a.localId).localeCompare(String(b.localId), undefined, { numeric: true });
+  });
+  $('#checklistGrid').innerHTML = sorted.map(c => {
+    const isOwned = owned.has(c.id);
+    const img = c.image ? '<img src="' + imgLow(c.image) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;img-ph&quot;>🃏</div>\'">' : '<div class="img-ph">🃏</div>';
+    return '<div class="card-tile' + (isOwned ? ' owned' : '') + '" data-id="' + escapeHtml(c.id) + '" style="' + (isOwned ? '' : 'opacity:.55') + '">' + img +
+      (isOwned ? '<span class="own-badge">✓ Got it!</span>' : '') +
+      '<div class="nm">' + escapeHtml(c.name) + '</div>' +
+      '<div class="st">#' + escapeHtml(c.localId || '') + '</div></div>';
+  }).join('');
+  $$('#checklistGrid .card-tile').forEach(t => t.addEventListener('click', () => openCard(t.dataset.id, 'checklist')));
+}
+
+// ---------- wishlist ----------
+function renderWish() {
+  const grid = $('#wishGrid');
+  const keys = Object.keys(state.wishlist);
+  $('#wishEmpty').style.display = keys.length ? 'none' : '';
+  grid.innerHTML = keys.map(k => {
+    const c = state.wishlist[k];
+    const img = c.image ? '<img src="' + imgLow(c.image) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;img-ph&quot;>🃏</div>\'">' : '<div class="img-ph">🃏</div>';
+    return '<div class="card-tile" data-id="' + escapeHtml(k) + '">' + img +
+      '<div class="nm">' + escapeHtml(c.name) + '</div>' +
+      '<div class="st">' + escapeHtml(c.setName || '') + ' · #' + escapeHtml(c.localId || '') + '</div>' +
+      '<button class="big-btn green" style="margin:8px 8px 0;padding:10px;font-size:1em" data-act="got">🎉 Got it!</button>' +
+      '<button class="remove-btn" data-act="remove">Remove</button></div>';
+  }).join('');
+  grid.querySelectorAll('.card-tile').forEach(t => {
+    const id = t.dataset.id;
+    t.querySelector('[data-act="got"]').addEventListener('click', e => { e.stopPropagation(); openCard(id, 'wish'); });
+    t.querySelector('[data-act="remove"]').addEventListener('click', e => {
+      e.stopPropagation();
+      const nm = state.wishlist[id].name;
+      delete state.wishlist[id]; saveState(); renderHeader(); renderWish();
+      toast('Removed ' + nm + ' from wishlist');
+    });
+    t.addEventListener('click', () => openCard(id, 'wish'));
+  });
+}
+
+// ---------- speak total ----------
+$('#speakBtn').addEventListener('click', () => {
+  const t = totals();
+  speak('Your Pokémon cards are worth ' + t.value.toFixed(0) + ' dollars. You have ' + t.count + ' cards!');
+});
+
+// ---------- init ----------
+loadState();
+renderHeader();
+</script>
+</body>
+</html>
